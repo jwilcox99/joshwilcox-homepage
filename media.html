@@ -1,9 +1,195 @@
-<h1>Josh's Media Server</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Josh's Media Server</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+      --border: rgba(148, 163, 184, 0.2);
+    }
 
-<ul>
-  <li><a href="#">Jellyfin</a></li>
-  <li><a href="#">Sonarr</a></li>
-  <li><a href="#">Radarr</a></li>
-  <li><a href="#">Prowlarr</a></li>
-  <li><a href="https://joshwilcox.net">Back home</a></li>
-</ul>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 32rem),
+        radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.16), transparent 30rem),
+        var(--bg);
+    }
+
+    main {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 56px 0;
+    }
+
+    .top-link {
+      display: inline-flex;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+
+    .top-link:hover { color: var(--accent); }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 5rem);
+      line-height: 0.95;
+      margin: 0;
+      letter-spacing: -0.06em;
+    }
+
+    .subtitle {
+      max-width: 650px;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.65;
+      margin-top: 20px;
+      margin-bottom: 34px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      display: block;
+      min-height: 165px;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 22px;
+      background: linear-gradient(145deg, rgba(31, 41, 55, 0.86), rgba(17, 24, 39, 0.82));
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.55);
+      background: linear-gradient(145deg, rgba(56, 189, 248, 0.16), rgba(17, 24, 39, 0.88));
+    }
+
+    .icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--accent-soft);
+      margin-bottom: 22px;
+      font-size: 1.35rem;
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.95rem;
+    }
+
+    .note {
+      margin-top: 34px;
+      padding: 20px;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.58);
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    footer {
+      margin-top: 42px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="top-link" href="https://joshwilcox.net">← Back to Josh's Home Base</a>
+
+    <div class="eyebrow">media.joshwilcox.net</div>
+    <h1>Media Server</h1>
+    <p class="subtitle">
+      A private launchpad for streaming, media organization, and server management tools.
+    </p>
+
+    <section class="grid">
+      <a class="card" href="#" target="_blank" rel="noreferrer">
+        <div class="icon">🎬</div>
+        <h2>Jellyfin</h2>
+        <p>Stream movies, shows, and personal media.</p>
+      </a>
+
+      <a class="card" href="#" target="_blank" rel="noreferrer">
+        <div class="icon">📺</div>
+        <h2>Sonarr</h2>
+        <p>Manage TV shows, seasons, and episode organization.</p>
+      </a>
+
+      <a class="card" href="#" target="_blank" rel="noreferrer">
+        <div class="icon">🍿</div>
+        <h2>Radarr</h2>
+        <p>Manage movies, folders, and media library organization.</p>
+      </a>
+
+      <a class="card" href="#" target="_blank" rel="noreferrer">
+        <div class="icon">🔎</div>
+        <h2>Prowlarr</h2>
+        <p>Manage indexers and connections to media tools.</p>
+      </a>
+
+      <a class="card" href="#" target="_blank" rel="noreferrer">
+        <div class="icon">⬇️</div>
+        <h2>qBittorrent</h2>
+        <p>View download status and manage transfers.</p>
+      </a>
+
+      <a class="card" href="#" target="_blank" rel="noreferrer">
+        <div class="icon">🗂️</div>
+        <h2>File Browser</h2>
+        <p>Optional shortcut for browsing media storage.</p>
+      </a>
+    </section>
+
+    <div class="note">
+      Replace each <strong>#</strong> with the correct private service URL when ready. For example, you can use Tailscale URLs now and later replace them with cleaner protected subdomains.
+    </div>
+
+    <footer>
+      Private media tools for personal use.
+    </footer>
+  </main>
+</body>
+</html>
