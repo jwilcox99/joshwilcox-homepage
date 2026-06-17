@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Hencox Library</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: #f4efe6;
+      color: #2d241b;
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #fffaf1;
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 6px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #c7b9a3;
+      font-size: 1rem;
+    }
+
+    button {
+      margin-top: 22px;
+      background: #5c3b24;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .status {
+      margin-top: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>📚 The Hencox Library</h1>
+    <p>Add a book to the family library.</p>
+
+    <form id="bookForm">
+      <label>Title</label>
+      <input name="title" required />
+
+      <label>Authors</label>
+      <input name="authors" />
+
+      <label>Status</label>
+      <select name="status" id="status"></select>
+
+      <label>Shelf / Location</label>
+      <select name="location" id="location"></select>
+
+      <label>Rating</label>
+      <input name="rating" type="number" min="0" max="5" step="0.25" />
+
+      <label>Genre</label>
+      <select name="genre" id="genre"></select>
+
+      <label>Favorite</label>
+      <select name="favorite" id="favorite"></select>
+
+      <label>Notes</label>
+      <textarea name="notes"></textarea>
+
+      <label>ISBN-13</label>
+      <input name="isbn13" />
+
+      <button type="submit">Add Book</button>
+    </form>
+
+    <div class="status" id="message"></div>
+  </main>
+
+  <script>
+    const API_URL = https://script.google.com/macros/s/AKfycbzHY0oyoG30CjNb02V4Dtz2rLpjOwb1KMt55MtjZZU-sr58ugWtO3EvGYbqjE99wlSj/exec;
+
+    const form = document.getElementById("bookForm");
+    const message = document.getElementById("message");
+
+    async function loadSettings() {
+      const res = await fetch(`${API_URL}?action=settings`);
+      const data = await res.json();
+
+      fillSelect("status", data.settings.Status);
+      fillSelect("location", data.settings["Shelf / Location"] || data.settings.Location);
+      fillSelect("genre", data.settings.Genre);
+      fillSelect("favorite", data.settings.Favorite);
+    }
+
+    function fillSelect(id, values = []) {
+      const select = document.getElementById(id);
+      select.innerHTML = "";
+
+      values.forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.textContent = "Adding book...";
+
+      const formData = new FormData(form);
+
+      const book = {
+        title: formData.get("title"),
+        authors: formData.get("authors"),
+        status: formData.get("status"),
+        location: formData.get("location"),
+        rating: formData.get("rating"),
+        genre: formData.get("genre"),
+        favorite: formData.get("favorite"),
+        notes: formData.get("notes"),
+        isbn13: formData.get("isbn13")
+      };
+
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "addBook",
+          book
+        })
+      });
+
+      const result = await res.json();
+
+      if (result.ok) {
+        message.textContent = `Added ${result.title || "book"} as ${result.bookId}`;
+        form.reset();
+      } else {
+        message.textContent = `Error: ${result.error}`;
+      }
+    });
+
+    loadSettings();
+  </script>
+</body>
+</html>
