@@ -52,9 +52,35 @@
       cursor: pointer;
     }
 
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #scanButton {
+      margin-top: 0;
+      background: #7a5030;
+    }
+
+    #scanner {
+      display: none;
+      margin-top: 16px;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid #c7b9a3;
+      background: #000;
+    }
+
     .status {
       margin-top: 16px;
       font-weight: bold;
+      white-space: pre-wrap;
+    }
+
+    .version {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      opacity: 0.6;
     }
   </style>
 </head>
@@ -64,8 +90,8 @@
     <p>Add a book to the family library.</p>
 
     <form id="bookForm" onsubmit="return false;">
-      <button type="button" id="scanButton">Scan Barcode</button>
-      <div id="scanner" style="display:none; margin-top:16px;"></div>
+      <button type="button" id="scanButton">Scan ISBN Barcode</button>
+      <div id="scanner"></div>
 
       <label>Title</label>
       <input name="title" required />
@@ -98,9 +124,10 @@
     </form>
 
     <div class="status" id="message"></div>
+    <div class="version">VERSION CLEAN-002</div>
   </main>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzHY0oyoG30CjNb02V4Dtz2rLpjOwb1KMt55MtjZZU-sr58ugWtO3EvGYbqjE99wlSj/exec";
@@ -108,70 +135,19 @@
     const form = document.getElementById("bookForm");
     const message = document.getElementById("message");
     const submitButton = document.getElementById("submitBook");
-
     const scanButton = document.getElementById("scanButton");
+    const scannerDiv = document.getElementById("scanner");
+
     let html5QrCode = null;
+    let scanInProgress = false;
 
-async function lookupBookByIsbn(isbn) {
-  const cleaned = isbn.replace(/[^0-9Xx]/g, "");
+    window.onerror = function(msg, source, line, col) {
+      message.textContent = `ERROR line ${line}: ${msg}`;
+    };
 
-  if (!(cleaned.length === 13 && (cleaned.startsWith("978") || cleaned.startsWith("979"))) && cleaned.length !== 10) {
-    message.textContent = `Scanned ${cleaned}, but that does not look like an ISBN. Try again.`;
-    return;
-  }
-
-  message.textContent = `Looking up ISBN ${cleaned}...`;
-
-  const url = `https://openlibrary.org/isbn/${cleaned}.json`;
-  console.log("Trying Open Library:", url);
-
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    message.textContent = `ISBN ${cleaned} not found. Try scanning again or enter manually.`;
-    return;
-  }
-
-  const data = await res.json();
-  console.log("Open Library result:", data);
-
-  form.elements["title"].value = data.title || "";
-  form.elements["authors"].value = "";
-  form.elements["isbn13"].value = cleaned;
-
-  message.textContent = `Found: ${data.title || "book"}`;
-}
-
-  function isbn13To10(isbn13) {
-    if (!isbn13.startsWith("978") || isbn13.length !== 13) return "";
-
-    const core = isbn13.substring(3, 12);
-    let sum = 0;
-
-    for (let i = 0; i < 9; i++) {
-      sum += Number(core[i]) * (10 - i);
-    }
-
-    const check = 11 - (sum % 11);
-    const checkDigit = check === 10 ? "X" : check === 11 ? "0" : String(check);
-
-    return core + checkDigit;
-  }
-
-  function isbn10To13(isbn10) {
-    if (isbn10.length !== 10) return "";
-
-    const core = "978" + isbn10.substring(0, 9);
-    let sum = 0;
-  
-    for (let i = 0; i < 12; i++) {
-      sum += Number(core[i]) * (i % 2 === 0 ? 1 : 3);
-    }
-
-    const checkDigit = (10 - (sum % 10)) % 10;
-
-    return core + String(checkDigit);
-  }
+    window.onunhandledrejection = function(event) {
+      message.textContent = `ERROR: ${event.reason && event.reason.message ? event.reason.message : event.reason}`;
+    };
 
     async function loadSettings() {
       try {
@@ -179,9 +155,6 @@ async function lookupBookByIsbn(isbn) {
 
         const res = await fetch(`${API_URL}?action=settings`);
         const data = await res.json();
-
-        console.log("Settings loaded:", data);
-
         const settings = data.settings || {};
 
         fillSelect("status", settings.Status || []);
@@ -213,75 +186,98 @@ async function lookupBookByIsbn(isbn) {
       });
     }
 
-    scanButton.addEventListener("click", async () => {
-      const scannerDiv = document.getElementById("scanner");
+    function cleanIsbn(value) {
+      return String(value || "").replace(/[^0-9Xx]/g, "").toUpperCase();
+    }
 
+    function looksLikeIsbn(isbn) {
+      const cleaned = cleanIsbn(isbn);
+      return (
+        (cleaned.length === 13 && (cleaned.startsWith("978") || cleaned.startsWith("979"))) ||
+        cleaned.length === 10
+      );
+    }
+
+    async function lookupBookByIsbn(isbn) {
+      const cleaned = cleanIsbn(isbn);
+
+      if (!looksLikeIsbn(cleaned)) {
+        message.textContent = `Scanned ${cleaned}, but that does not look like an ISBN. Try the main barcode.`;
+        return;
+      }
+
+      message.textContent = `Looking up ISBN ${cleaned}...`;
+
+      const url = `https://openlibrary.org/isbn/${cleaned}.json`;
+      console.log("Trying Open Library:", url);
+
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        message.textContent = `ISBN ${cleaned} not found. You can enter it manually.`;
+        form.elements["isbn13"].value = cleaned;
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Open Library result:", data);
+
+      form.elements["title"].value = data.title || "";
+      form.elements["authors"].value = "";
+      form.elements["isbn13"].value = cleaned;
+
+      message.textContent = `Found: ${data.title || "book"}`;
+    }
+
+    async function stopScanner() {
+      if (html5QrCode && scanInProgress) {
+        await html5QrCode.stop();
+      }
+
+      scanInProgress = false;
+      scannerDiv.style.display = "none";
+      scanButton.disabled = false;
+    }
+
+    scanButton.addEventListener("click", async () => {
       try {
+        scanButton.disabled = true;
         scannerDiv.style.display = "block";
         message.textContent = "Starting camera...";
 
-      if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("scanner");
-      }
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("scanner");
+        }
 
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 260, height: 160 }
-        },
-        async (decodedText) => {
-          const isbn = decodedText.replace(/[^0-9Xx]/g, "");
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 260, height: 160 }
+          },
+          async (decodedText) => {
+            const isbn = cleanIsbn(decodedText);
 
-          if (isbn.length < 10) return;
+            if (!looksLikeIsbn(isbn)) {
+              message.textContent = `Scanned ${isbn}, but that does not look like an ISBN.`;
+              return;
+            }
 
-          await html5QrCode.stop();
-          scannerDiv.style.display = "none";
+            await stopScanner();
+            await lookupBookByIsbn(isbn);
+          }
+        );
 
-          await lookupBookByIsbn(isbn);
-      }
-    );
-
-      message.textContent = "Point camera at the book barcode.";
-    } catch (err) {
-      console.error("Scanner error:", err);
-      scanButton.addEventListener("click", async () => {
-  const scannerDiv = document.getElementById("scanner");
-
-  try {
-    scannerDiv.style.display = "block";
-    message.textContent = "Starting camera...";
-
-    if (!html5QrCode) {
-      html5QrCode = new Html5Qrcode("scanner");
-    }
-
-    await html5QrCode.start(
-      { facingMode: "environment" },
-      {
-        fps: 10,
-        qrbox: { width: 260, height: 160 }
-      },
-      async (decodedText) => {
-        const isbn = decodedText.replace(/[^0-9Xx]/g, "");
-
-        if (isbn.length < 10) return;
-
-        await html5QrCode.stop();
+        scanInProgress = true;
+        message.textContent = "Point camera at the book ISBN barcode.";
+      } catch (err) {
+        console.error("Scanner error:", err);
+        scanInProgress = false;
         scannerDiv.style.display = "none";
-
-        await lookupBookByIsbn(isbn);
+        scanButton.disabled = false;
+        message.textContent = "Could not start scanner: " + err.message;
       }
-    );
-
-    message.textContent = "Point camera at the book barcode.";
-  } catch (err) {
-    console.error("Scanner error:", err);
-    message.textContent = "Could not start scanner: " + err.message;
-  }
-});message.textContent = "Could not start scanner: " + err.message;
-  }
-});
+    });
 
     submitButton.addEventListener("click", async () => {
       try {
@@ -313,7 +309,6 @@ async function lookupBookByIsbn(isbn) {
         });
 
         const result = await res.json();
-        console.log("Add result:", result);
 
         if (result.ok) {
           message.textContent = `Added ${result.title || "book"} as ${result.bookId}`;
