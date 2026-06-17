@@ -112,25 +112,78 @@
     const scanButton = document.getElementById("scanButton");
     let html5QrCode = null;
 
-    async function lookupBookByIsbn(isbn) {
-      message.textContent = "Looking up book...";
+  async function lookupBookByIsbn(isbn) {
+    message.textContent = `Looking up ISBN ${isbn}...`;
 
-      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
-      const data = await res.json();
+    const cleaned = isbn.replace(/[^0-9Xx]/g, "");
+    const candidates = [cleaned];
 
-    if (!data.items || data.items.length === 0) {
-      message.textContent = `No book found for ISBN ${isbn}`;
-      return;
+    // If scanner gives ISBN-13, also try the 10-digit version.
+    if (cleaned.length === 13 && cleaned.startsWith("978")) {
+      const isbn10 = isbn13To10(cleaned);
+      if (isbn10) candidates.push(isbn10);
+    }  
+
+    // If scanner gives ISBN-10, also try the 13-digit version.
+    if (cleaned.length === 10) {
+      const isbn13 = isbn10To13(cleaned);
+      if (isbn13) candidates.push(isbn13);
     }
 
-    const book = data.items[0].volumeInfo;
+    for (const candidate of candidates) {
+      const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${candidate}`;
+      console.log("Trying Google Books:", url);
 
-    form.elements["title"].value = book.title || "";
-    form.elements["authors"].value = (book.authors || []).join(", ");
-    form.elements["isbn13"].value = isbn;
+      const res = await fetch(url);
+      const data = await res.json();
 
-    message.textContent = `Found: ${book.title || "book"}`;
-}
+      console.log("Google Books result:", data);
+
+      if (data.items && data.items.length > 0) {
+        const book = data.items[0].volumeInfo;
+
+        form.elements["title"].value = book.title || "";
+        form.elements["authors"].value = (book.authors || []).join(", ");
+        form.elements["isbn13"].value = cleaned;
+
+        message.textContent = `Found: ${book.title || "book"}`;
+        return;
+      }
+    }
+
+    message.textContent = `ISBN ${cleaned} not found. You can enter the title manually.`;
+  }
+
+  function isbn13To10(isbn13) {
+    if (!isbn13.startsWith("978") || isbn13.length !== 13) return "";
+
+    const core = isbn13.substring(3, 12);
+    let sum = 0;
+
+    for (let i = 0; i < 9; i++) {
+      sum += Number(core[i]) * (10 - i);
+    }
+
+    const check = 11 - (sum % 11);
+    const checkDigit = check === 10 ? "X" : check === 11 ? "0" : String(check);
+
+    return core + checkDigit;
+  }
+
+  function isbn10To13(isbn10) {
+    if (isbn10.length !== 10) return "";
+
+    const core = "978" + isbn10.substring(0, 9);
+    let sum = 0;
+  
+    for (let i = 0; i < 12; i++) {
+      sum += Number(core[i]) * (i % 2 === 0 ? 1 : 3);
+    }
+
+    const checkDigit = (10 - (sum % 10)) % 10;
+
+    return core + String(checkDigit);
+  }
 
     async function loadSettings() {
       try {
