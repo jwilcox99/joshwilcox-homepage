@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Hencox Library</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: #f4efe6;
+      color: #2d241b;
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #fffaf1;
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 6px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #c7b9a3;
+      font-size: 1rem;
+    }
+
+    button {
+      margin-top: 22px;
+      background: #5c3b24;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #scanButton {
+      margin-top: 0;
+      background: #7a5030;
+    }
+
+    #scanner {
+      display: none;
+      margin-top: 16px;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid #c7b9a3;
+      background: #000;
+    }
+
+    .status {
+      margin-top: 16px;
+      font-weight: bold;
+      white-space: pre-wrap;
+    }
+
+    .version {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>📚 The Hencox Library</h1>
+    <p>Add a book to the family library.</p>
+
+    <form id="bookForm" onsubmit="return false;">
+      <button type="button" id="scanButton">Scan ISBN Barcode</button>
+      <div id="scanner"></div>
+
+      <label>Title</label>
+      <input name="title" required />
+
+      <label>Authors</label>
+      <input name="authors" />
+
+      <label>Status</label>
+      <select name="status" id="status"></select>
+
+      <label>Shelf / Location</label>
+      <select name="location" id="location"></select>
+
+      <label>Rating</label>
+      <input name="rating" type="number" min="0" max="5" step="0.25" />
+
+      <label>Genre</label>
+      <select name="genre" id="genre"></select>
+
+      <label>Favorite</label>
+      <select name="favorite" id="favorite"></select>
+
+      <label>Notes</label>
+      <textarea name="notes"></textarea>
+
+      <label>ISBN-13</label>
+      <input name="isbn13" />
+
+      <button type="button" id="submitBook">Add Book</button>
+    </form>
+
+    <div class="status" id="message"></div>
+    <div class="version">VERSION CLEAN-002</div>
+  </main>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzHY0oyoG30CjNb02V4Dtz2rLpjOwb1KMt55MtjZZU-sr58ugWtO3EvGYbqjE99wlSj/exec";
+
+    const form = document.getElementById("bookForm");
+    const message = document.getElementById("message");
+    const submitButton = document.getElementById("submitBook");
+    const scanButton = document.getElementById("scanButton");
+    const scannerDiv = document.getElementById("scanner");
+
+    let html5QrCode = null;
+    let scanInProgress = false;
+
+    window.onerror = function(msg, source, line, col) {
+      message.textContent = `ERROR line ${line}: ${msg}`;
+    };
+
+    window.onunhandledrejection = function(event) {
+      message.textContent = `ERROR: ${event.reason && event.reason.message ? event.reason.message : event.reason}`;
+    };
+
+    async function loadSettings() {
+      try {
+        message.textContent = "Loading settings...";
+
+        const res = await fetch(`${API_URL}?action=settings`);
+        const data = await res.json();
+        const settings = data.settings || {};
+
+        fillSelect("status", settings.Status || []);
+        fillSelect("location", settings.Location || settings["Shelf / Location"] || []);
+        fillSelect("genre", settings.Genre || []);
+        fillSelect("favorite", settings.Favorite || []);
+
+        message.textContent = "";
+      } catch (err) {
+        console.error("Settings error:", err);
+        message.textContent = "Could not load settings: " + err.message;
+      }
+    }
+
+    function fillSelect(id, values = []) {
+      const select = document.getElementById(id);
+      select.innerHTML = "";
+
+      const blank = document.createElement("option");
+      blank.value = "";
+      blank.textContent = "";
+      select.appendChild(blank);
+
+      values.forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
+
+    function cleanIsbn(value) {
+      return String(value || "").replace(/[^0-9Xx]/g, "").toUpperCase();
+    }
+
+    function looksLikeIsbn(isbn) {
+      const cleaned = cleanIsbn(isbn);
+      return (
+        (cleaned.length === 13 && (cleaned.startsWith("978") || cleaned.startsWith("979"))) ||
+        cleaned.length === 10
+      );
+    }
+
+    async function lookupBookByIsbn(isbn) {
+      const cleaned = cleanIsbn(isbn);
+
+      if (!looksLikeIsbn(cleaned)) {
+        message.textContent = `Scanned ${cleaned}, but that does not look like an ISBN. Try the main barcode.`;
+        return;
+      }
+
+      message.textContent = `Looking up ISBN ${cleaned}...`;
+
+      const url = `https://openlibrary.org/isbn/${cleaned}.json`;
+      console.log("Trying Open Library:", url);
+
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        message.textContent = `ISBN ${cleaned} not found. You can enter it manually.`;
+        form.elements["isbn13"].value = cleaned;
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Open Library result:", data);
+
+      form.elements["title"].value = data.title || "";
+      form.elements["authors"].value = "";
+      form.elements["isbn13"].value = cleaned;
+
+      message.textContent = `Found: ${data.title || "book"}`;
+    }
+
+    async function stopScanner() {
+      if (html5QrCode && scanInProgress) {
+        await html5QrCode.stop();
+      }
+
+      scanInProgress = false;
+      scannerDiv.style.display = "none";
+      scanButton.disabled = false;
+    }
+
+    scanButton.addEventListener("click", async () => {
+      try {
+        scanButton.disabled = true;
+        scannerDiv.style.display = "block";
+        message.textContent = "Starting camera...";
+
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("scanner");
+        }
+
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 260, height: 160 }
+          },
+          async (decodedText) => {
+            const isbn = cleanIsbn(decodedText);
+
+            if (!looksLikeIsbn(isbn)) {
+              message.textContent = `Scanned ${isbn}, but that does not look like an ISBN.`;
+              return;
+            }
+
+            await stopScanner();
+            await lookupBookByIsbn(isbn);
+          }
+        );
+
+        scanInProgress = true;
+        message.textContent = "Point camera at the book ISBN barcode.";
+      } catch (err) {
+        console.error("Scanner error:", err);
+        scanInProgress = false;
+        scannerDiv.style.display = "none";
+        scanButton.disabled = false;
+        message.textContent = "Could not start scanner: " + err.message;
+      }
+    });
+
+    submitButton.addEventListener("click", async () => {
+      try {
+        if (!form.reportValidity()) return;
+
+        message.textContent = "Adding book...";
+        submitButton.disabled = true;
+
+        const formData = new FormData(form);
+
+        const book = {
+          title: formData.get("title"),
+          authors: formData.get("authors"),
+          status: formData.get("status"),
+          location: formData.get("location"),
+          rating: formData.get("rating"),
+          genre: formData.get("genre"),
+          favorite: formData.get("favorite"),
+          notes: formData.get("notes"),
+          isbn13: formData.get("isbn13")
+        };
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "addBook",
+            book
+          })
+        });
+
+        const result = await res.json();
+
+        if (result.ok) {
+          message.textContent = `Added ${result.title || "book"} as ${result.bookId}`;
+          form.reset();
+        } else {
+          message.textContent = `Error: ${result.error || "Unknown error"}`;
+        }
+      } catch (err) {
+        console.error("Submit error:", err);
+        message.textContent = "Could not add book: " + err.message;
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    loadSettings();
+  </script>
+</body>
+</html>
