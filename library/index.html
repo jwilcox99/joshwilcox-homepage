@@ -138,7 +138,6 @@ async function lookupBookByIsbn(isbn) {
   form.elements["title"].value = data.title || "";
   form.elements["authors"].value = "";
   form.elements["isbn13"].value = cleaned;
-  form.elements["publisher"].value = data.publishers ? data.publishers.join(", ") : "";
 
   message.textContent = `Found: ${data.title || "book"}`;
 }
