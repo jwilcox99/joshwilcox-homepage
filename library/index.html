@@ -107,10 +107,12 @@
       const res = await fetch(`${API_URL}?action=settings`);
       const data = await res.json();
 
-      fillSelect("status", data.settings.Status);
-      fillSelect("location", data.settings["Shelf / Location"] || data.settings.Location);
-      fillSelect("genre", data.settings.Genre);
-      fillSelect("favorite", data.settings.Favorite);
+console.log("Settings loaded:", data.settings);
+
+fillSelect("status", data.settings.Status || []);
+fillSelect("location", data.settings.Location || data.settings["Shelf / Location"] || []);
+fillSelect("genre", data.settings.Genre || []);
+fillSelect("favorite", data.settings.Favorite || []);
     }
 
     function fillSelect(id, values = []) {
