@@ -140,7 +140,7 @@
 
   <section id="homeScreen">
     <button type="button" id="homeScanButton">📷 Scan Barcode</button>
-    <button type="button" id="homeAddButton">➕ Add Book</button>
+    <button type="button" id="homeAddButton">➕ Add Book Manually</button>
     <button type="button" id="homeLibraryButton">📚 View Library</button>
 
     <h2>Recently Added</h2>
@@ -217,13 +217,119 @@
     const viewLibraryButton = document.getElementById("viewLibrary");
     const libraryList = document.getElementById("libraryList");
 
+const homeScreen = document.getElementById("homeScreen");
+const addBookScreen = document.getElementById("addBookScreen");
+const libraryScreen = document.getElementById("libraryScreen");
+
+const homeScanButton = document.getElementById("homeScanButton");
+const homeAddButton = document.getElementById("homeAddButton");
+const homeLibraryButton = document.getElementById("homeLibraryButton");
+
+const backFromAdd = document.getElementById("backFromAdd");
+const backFromLibrary = document.getElementById("backFromLibrary");
+
+const recentList = document.getElementById("recentList");
+const libraryList = document.getElementById("libraryList");
+
     let html5QrCode = null;
     let scanInProgress = false;
 
     function cleanIsbn(value) {
       return String(value || "").replace(/[^0-9Xx]/g, "").toUpperCase();
     }
+function guessGenre(subjects = []) {
+  const text = subjects.join(" ").toLowerCase();
 
+  // Graphic Novels
+  if (
+    text.includes("graphic novel") ||
+    text.includes("graphic novels") ||
+    text.includes("comic") ||
+    text.includes("comics") ||
+    text.includes("manga")
+  ) return "Graphic Novel";
+
+  // Young Adult
+  if (
+    text.includes("young adult") ||
+    text.includes("ya fiction") ||
+    text.includes("teen fiction")
+  ) return "Young Adult";
+
+  // Romantasy
+  if (
+    (text.includes("fantasy") && text.includes("romance")) ||
+    text.includes("romantasy")
+  ) return "Romantasy";
+
+  // Historical Romance
+  if (
+    text.includes("historical romance")
+  ) return "Historical Romance";
+
+  // Historical Fiction
+  if (
+    text.includes("historical fiction")
+  ) return "Historical Fiction";
+
+  // Science Fiction
+  if (
+    text.includes("science fiction") ||
+    text.includes("sci-fi")
+  ) return "Science Fiction";
+
+  if (text.includes("fantasy")) return "Fantasy";
+
+  if (
+    text.includes("mystery") ||
+    text.includes("detective")
+  ) return "Mystery";
+
+  if (
+    text.includes("thriller") ||
+    text.includes("suspense")
+  ) return "Thriller";
+
+  if (text.includes("horror")) return "Horror";
+
+  if (text.includes("romance")) return "Romance";
+
+  if (
+    text.includes("biography") ||
+    text.includes("autobiography")
+  ) return "Biography";
+
+  if (text.includes("memoir")) return "Memoir";
+
+  if (text.includes("history")) return "History";
+
+  if (text.includes("business")) return "Business";
+
+  if (
+    text.includes("self-help") ||
+    text.includes("self help")
+  ) return "Self-Help";
+
+  if (
+    text.includes("cookery") ||
+    text.includes("cooking") ||
+    text.includes("cookbook")
+  ) return "Cookbook";
+
+  if (text.includes("travel")) return "Travel";
+
+  if (text.includes("poetry")) return "Poetry";
+
+  if (text.includes("children")) return "Children's";
+
+  if (text.includes("classic")) return "Classic";
+
+  if (text.includes("nonfiction")) return "Nonfiction";
+
+  if (text.includes("fiction")) return "Fiction";
+
+  return "";
+}
     function looksLikeIsbn(isbn) {
       const cleaned = cleanIsbn(isbn);
       return (
@@ -231,6 +337,38 @@
         cleaned.length === 10
       );
     }
+
+function showScreen(screenName) {
+  homeScreen.classList.add("hidden");
+  addBookScreen.classList.add("hidden");
+  libraryScreen.classList.add("hidden");
+
+  if (screenName === "home") homeScreen.classList.remove("hidden");
+  if (screenName === "add") addBookScreen.classList.remove("hidden");
+  if (screenName === "library") libraryScreen.classList.remove("hidden");
+}
+
+homeAddButton.addEventListener("click", () => {
+  showScreen("add");
+});
+
+homeScanButton.addEventListener("click", () => {
+  showScreen("add");
+  setTimeout(() => scanButton.click(), 200);
+});
+
+homeLibraryButton.addEventListener("click", async () => {
+  showScreen("library");
+  await loadLibrary();
+});
+
+backFromAdd.addEventListener("click", () => {
+  showScreen("home");
+});
+
+backFromLibrary.addEventListener("click", () => {
+  showScreen("home");
+});
 
     async function loadSettings() {
       try {
@@ -318,6 +456,7 @@
       form.elements["publishedDate"].value = data.publish_date || "";
       form.elements["pageCount"].value = data.number_of_pages || "";
       form.elements["categories"].value = data.subjects ? data.subjects.slice(0, 8).join(", ") : "";
+      form.elements["genre"].value = guessGenre(data.subjects || []);
       form.elements["coverUrl"].value =
         data.covers && data.covers.length
           ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-L.jpg`
