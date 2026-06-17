@@ -223,10 +223,31 @@
       console.log("Open Library result:", data);
 
       form.elements["title"].value = data.title || "";
-      form.elements["authors"].value = "";
       form.elements["isbn13"].value = cleaned;
 
-      message.textContent = `Found: ${data.title || "book"}`;
+      let authorNames = [];
+
+      if (data.authors && data.authors.length) {
+        for (const author of data.authors) {
+         try {
+            const authorRes = await fetch(
+              `https://openlibrary.org${author.key}.json`
+            );
+
+            if (authorRes.ok) {
+              const authorData = await authorRes.json();
+              authorNames.push(authorData.name);
+            }
+          } catch (err) {
+            console.error("Author lookup failed", err);
+          }
+        }
+      }
+
+form.elements["authors"].value = authorNames.join(", ");
+
+message.textContent =
+  `Found: ${data.title || "book"} by ${authorNames.join(", ")}`;
     }
 
     async function stopScanner() {
