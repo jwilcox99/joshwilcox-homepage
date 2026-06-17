@@ -64,6 +64,9 @@
     <p>Add a book to the family library.</p>
 
     <form id="bookForm" onsubmit="return false;">
+      <button type="button" id="scanButton">Scan Barcode</button>
+      <div id="scanner" style="display:none; margin-top:16px;"></div>
+
       <label>Title</label>
       <input name="title" required />
 
@@ -97,12 +100,37 @@
     <div class="status" id="message"></div>
   </main>
 
+<script src="https://unpkg.com/html5-qrcode"></script>
+
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzHY0oyoG30CjNb02V4Dtz2rLpjOwb1KMt55MtjZZU-sr58ugWtO3EvGYbqjE99wlSj/exec";
 
     const form = document.getElementById("bookForm");
     const message = document.getElementById("message");
     const submitButton = document.getElementById("submitBook");
+
+    const scanButton = document.getElementById("scanButton");
+    let html5QrCode = null;
+
+    async function lookupBookByIsbn(isbn) {
+      message.textContent = "Looking up book...";
+
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+      const data = await res.json();
+
+    if (!data.items || data.items.length === 0) {
+      message.textContent = `No book found for ISBN ${isbn}`;
+      return;
+    }
+
+    const book = data.items[0].volumeInfo;
+
+    form.elements["title"].value = book.title || "";
+    form.elements["authors"].value = (book.authors || []).join(", ");
+    form.elements["isbn13"].value = isbn;
+
+    message.textContent = `Found: ${book.title || "book"}`;
+}
 
     async function loadSettings() {
       try {
@@ -143,6 +171,76 @@
         select.appendChild(option);
       });
     }
+
+    scanButton.addEventListener("click", async () => {
+      const scannerDiv = document.getElementById("scanner");
+
+      try {
+        scannerDiv.style.display = "block";
+        message.textContent = "Starting camera...";
+
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("scanner");
+      }
+
+      await html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 260, height: 160 }
+        },
+        async (decodedText) => {
+          const isbn = decodedText.replace(/[^0-9Xx]/g, "");
+
+          if (isbn.length < 10) return;
+
+          await html5QrCode.stop();
+          scannerDiv.style.display = "none";
+
+          await lookupBookByIsbn(isbn);
+      }
+    );
+
+      message.textContent = "Point camera at the book barcode.";
+    } catch (err) {
+      console.error("Scanner error:", err);
+      scanButton.addEventListener("click", async () => {
+  const scannerDiv = document.getElementById("scanner");
+
+  try {
+    scannerDiv.style.display = "block";
+    message.textContent = "Starting camera...";
+
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode("scanner");
+    }
+
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: 260, height: 160 }
+      },
+      async (decodedText) => {
+        const isbn = decodedText.replace(/[^0-9Xx]/g, "");
+
+        if (isbn.length < 10) return;
+
+        await html5QrCode.stop();
+        scannerDiv.style.display = "none";
+
+        await lookupBookByIsbn(isbn);
+      }
+    );
+
+    message.textContent = "Point camera at the book barcode.";
+  } catch (err) {
+    console.error("Scanner error:", err);
+    message.textContent = "Could not start scanner: " + err.message;
+  }
+});message.textContent = "Could not start scanner: " + err.message;
+  }
+});
 
     submitButton.addEventListener("click", async () => {
       try {
