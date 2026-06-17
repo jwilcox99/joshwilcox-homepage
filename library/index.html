@@ -135,8 +135,15 @@
       console.log("Trying Google Books:", url);
 
       const res = await fetch(url);
+      
+      console.log("Status:", res.status);
+      console.log("URL:", url);
+
       const data = await res.json();
 
+      console.log(data);      
+      console.log("Status:", res.status);
+      console.log("URL:", url);
       console.log("Google Books result:", data);
 
       if (data.items && data.items.length > 0) {
