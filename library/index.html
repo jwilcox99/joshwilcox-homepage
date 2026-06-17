@@ -90,7 +90,7 @@
     <p>Add a book to the family library.</p>
 
     <form id="bookForm" onsubmit="return false;">
-      <button type="button" id="scanButton">Scan ISBN Barcode</button>
+      <button type="button" id="scanButton">Scan Barcode</button>
       <div id="scanner"></div>
 
       <label>Title</label>
@@ -120,11 +120,19 @@
       <label>ISBN-13</label>
       <input name="isbn13" />
 
+      <input type="hidden" name="publisher" />
+      <input type="hidden" name="publishedDate" />
+      <input type="hidden" name="pageCount" />
+      <input type="hidden" name="categories" />
+      <input type="hidden" name="coverUrl" />
+      <input type="hidden" name="googleBooksLink" />
+      <input type="hidden" name="description" />
+
       <button type="button" id="submitBook">Add Book</button>
     </form>
 
     <div class="status" id="message"></div>
-    <div class="version">VERSION CLEAN-002</div>
+    <div class="version">VERSION CLEAN-003</div>
   </main>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
@@ -141,13 +149,17 @@
     let html5QrCode = null;
     let scanInProgress = false;
 
-    window.onerror = function(msg, source, line, col) {
-      message.textContent = `ERROR line ${line}: ${msg}`;
-    };
+    function cleanIsbn(value) {
+      return String(value || "").replace(/[^0-9Xx]/g, "").toUpperCase();
+    }
 
-    window.onunhandledrejection = function(event) {
-      message.textContent = `ERROR: ${event.reason && event.reason.message ? event.reason.message : event.reason}`;
-    };
+    function looksLikeIsbn(isbn) {
+      const cleaned = cleanIsbn(isbn);
+      return (
+        (cleaned.length === 13 && (cleaned.startsWith("978") || cleaned.startsWith("979"))) ||
+        cleaned.length === 10
+      );
+    }
 
     async function loadSettings() {
       try {
@@ -186,18 +198,6 @@
       });
     }
 
-    function cleanIsbn(value) {
-      return String(value || "").replace(/[^0-9Xx]/g, "").toUpperCase();
-    }
-
-    function looksLikeIsbn(isbn) {
-      const cleaned = cleanIsbn(isbn);
-      return (
-        (cleaned.length === 13 && (cleaned.startsWith("978") || cleaned.startsWith("979"))) ||
-        cleaned.length === 10
-      );
-    }
-
     async function lookupBookByIsbn(isbn) {
       const cleaned = cleanIsbn(isbn);
 
@@ -229,14 +229,12 @@
 
       if (data.authors && data.authors.length) {
         for (const author of data.authors) {
-         try {
-            const authorRes = await fetch(
-              `https://openlibrary.org${author.key}.json`
-            );
+          try {
+            const authorRes = await fetch(`https://openlibrary.org${author.key}.json`);
 
             if (authorRes.ok) {
               const authorData = await authorRes.json();
-              authorNames.push(authorData.name);
+              if (authorData.name) authorNames.push(authorData.name);
             }
           } catch (err) {
             console.error("Author lookup failed", err);
@@ -244,10 +242,25 @@
         }
       }
 
-form.elements["authors"].value = authorNames.join(", ");
+      form.elements["authors"].value = authorNames.join(", ");
+      form.elements["publisher"].value = data.publishers ? data.publishers.join(", ") : "";
+      form.elements["publishedDate"].value = data.publish_date || "";
+      form.elements["pageCount"].value = data.number_of_pages || "";
+      form.elements["categories"].value = data.subjects ? data.subjects.slice(0, 8).join(", ") : "";
+      form.elements["coverUrl"].value =
+        data.covers && data.covers.length
+          ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-L.jpg`
+          : "";
+      form.elements["googleBooksLink"].value = `https://openlibrary.org/isbn/${cleaned}`;
+      form.elements["description"].value =
+        typeof data.description === "string"
+          ? data.description
+          : data.description && data.description.value
+            ? data.description.value
+            : "";
 
-message.textContent =
-  `Found: ${data.title || "book"} by ${authorNames.join(", ")}`;
+      message.textContent =
+        `Found: ${data.title || "book"}${authorNames.length ? " by " + authorNames.join(", ") : ""}`;
     }
 
     async function stopScanner() {
@@ -318,7 +331,14 @@ message.textContent =
           genre: formData.get("genre"),
           favorite: formData.get("favorite"),
           notes: formData.get("notes"),
-          isbn13: formData.get("isbn13")
+          isbn13: formData.get("isbn13"),
+          publisher: formData.get("publisher"),
+          publishedDate: formData.get("publishedDate"),
+          pageCount: formData.get("pageCount"),
+          categories: formData.get("categories"),
+          coverUrl: formData.get("coverUrl"),
+          googleBooksLink: formData.get("googleBooksLink"),
+          description: formData.get("description")
         };
 
         const res = await fetch(API_URL, {
