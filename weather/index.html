@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Garden Weather Station</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Garden Weather Station</h1>
+      <p id="lastUpdated">Loading current conditions...</p>
+    </header>
+
+    <div class="range-buttons">
+      <button data-range="24h" class="active">24h</button>
+      <button data-range="7d">7d</button>
+      <button data-range="30d">30d</button>
+    </div> 	
+
+    <section class="cards">
+      <div class="card"><span>Temperature</span><strong id="temp">--</strong></div>
+      <div class="card"><span>Humidity</span><strong id="humidity">--</strong></div>
+      <div class="card"><span>Pressure</span><strong id="pressure">--</strong></div>
+      <div class="card"><span>Air Quality</span><strong id="gas">--</strong></div>
+      <div class="card"><span>Soil</span><strong id="soil">--</strong></div>
+      <div class="card"><span>Battery</span><strong id="battery">--</strong></div>
+    </section>
+
+    <section class="chart-box">
+      <h2>Temperature - Last 24 Hours</h2>
+      <canvas id="tempChart"></canvas>
+    </section>
+
+    <section class="chart-box">
+      <h2>Humidity - Last 24 Hours</h2>
+      <canvas id="humidityChart"></canvas>
+    </section>
+
+    <section class="chart-box">
+      <h2>Pressure - Last 24 Hours</h2>
+      <canvas id="pressureChart"></canvas>
+    </section>
+
+    <section class="chart-box">
+      <h2>Battery - Last 24 Hours</h2>
+      <canvas id="batteryChart"></canvas>
+    </section>
+  </main>
+
+  <script src="weather.js"></script>
+</body>
+</html>
