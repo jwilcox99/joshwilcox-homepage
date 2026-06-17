@@ -63,7 +63,7 @@
     <h1>📚 The Hencox Library</h1>
     <p>Add a book to the family library.</p>
 
-    <form id="bookForm">
+    <form id="bookForm" onsubmit="return false;">
       <label>Title</label>
       <input name="title" required />
 
@@ -91,7 +91,7 @@
       <label>ISBN-13</label>
       <input name="isbn13" />
 
-      <button type="submit">Add Book</button>
+      <button type="button" id="submitBook">Add Book</button>
     </form>
 
     <div class="status" id="message"></div>
@@ -102,22 +102,39 @@
 
     const form = document.getElementById("bookForm");
     const message = document.getElementById("message");
+    const submitButton = document.getElementById("submitBook");
 
     async function loadSettings() {
-      const res = await fetch(`${API_URL}?action=settings`);
-      const data = await res.json();
+      try {
+        message.textContent = "Loading settings...";
 
-console.log("Settings loaded:", data.settings);
+        const res = await fetch(`${API_URL}?action=settings`);
+        const data = await res.json();
 
-fillSelect("status", data.settings.Status || []);
-fillSelect("location", data.settings.Location || data.settings["Shelf / Location"] || []);
-fillSelect("genre", data.settings.Genre || []);
-fillSelect("favorite", data.settings.Favorite || []);
+        console.log("Settings loaded:", data);
+
+        const settings = data.settings || {};
+
+        fillSelect("status", settings.Status || []);
+        fillSelect("location", settings.Location || settings["Shelf / Location"] || []);
+        fillSelect("genre", settings.Genre || []);
+        fillSelect("favorite", settings.Favorite || []);
+
+        message.textContent = "";
+      } catch (err) {
+        console.error("Settings error:", err);
+        message.textContent = "Could not load settings: " + err.message;
+      }
     }
 
     function fillSelect(id, values = []) {
       const select = document.getElementById(id);
       select.innerHTML = "";
+
+      const blank = document.createElement("option");
+      blank.value = "";
+      blank.textContent = "";
+      select.appendChild(blank);
 
       values.forEach(value => {
         const option = document.createElement("option");
@@ -127,39 +144,49 @@ fillSelect("favorite", data.settings.Favorite || []);
       });
     }
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      message.textContent = "Adding book...";
+    submitButton.addEventListener("click", async () => {
+      try {
+        if (!form.reportValidity()) return;
 
-      const formData = new FormData(form);
+        message.textContent = "Adding book...";
+        submitButton.disabled = true;
 
-      const book = {
-        title: formData.get("title"),
-        authors: formData.get("authors"),
-        status: formData.get("status"),
-        location: formData.get("location"),
-        rating: formData.get("rating"),
-        genre: formData.get("genre"),
-        favorite: formData.get("favorite"),
-        notes: formData.get("notes"),
-        isbn13: formData.get("isbn13")
-      };
+        const formData = new FormData(form);
 
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          action: "addBook",
-          book
-        })
-      });
+        const book = {
+          title: formData.get("title"),
+          authors: formData.get("authors"),
+          status: formData.get("status"),
+          location: formData.get("location"),
+          rating: formData.get("rating"),
+          genre: formData.get("genre"),
+          favorite: formData.get("favorite"),
+          notes: formData.get("notes"),
+          isbn13: formData.get("isbn13")
+        };
 
-      const result = await res.json();
+        const res = await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "addBook",
+            book
+          })
+        });
 
-      if (result.ok) {
-        message.textContent = `Added ${result.title || "book"} as ${result.bookId}`;
-        form.reset();
-      } else {
-        message.textContent = `Error: ${result.error}`;
+        const result = await res.json();
+        console.log("Add result:", result);
+
+        if (result.ok) {
+          message.textContent = `Added ${result.title || "book"} as ${result.bookId}`;
+          form.reset();
+        } else {
+          message.textContent = `Error: ${result.error || "Unknown error"}`;
+        }
+      } catch (err) {
+        console.error("Submit error:", err);
+        message.textContent = "Could not add book: " + err.message;
+      } finally {
+        submitButton.disabled = false;
       }
     });
 
