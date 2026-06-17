@@ -82,6 +82,28 @@
       font-size: 0.8rem;
       opacity: 0.6;
     }
+
+#libraryList {
+  margin-top: 20px;
+}
+
+.book-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin-top: 12px;
+  background: #f8efe2;
+  border: 1px solid #d8c4aa;
+  border-radius: 16px;
+}
+
+.book-card img {
+  width: 55px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #ddd;
+}
   </style>
 
 <link rel="manifest" href="/library/manifest.json">
@@ -133,7 +155,7 @@
       <input type="hidden" name="publisher" />
       <input type="hidden" name="publishedDate" />
       <input type="hidden" name="pageCount" />
-      <input type="hidden" name="categories" />
+     <div id="libraryList"></div>  <input type="hidden" name="categories" />
       <input type="hidden" name="coverUrl" />
       <input type="hidden" name="googleBooksLink" />
       <input type="hidden" name="description" />
@@ -141,7 +163,12 @@
       <button type="button" id="submitBook">Add Book</button>
     </form>
 
+     <button id="viewLibrary">📖 View Library</button>
+
     <div class="status" id="message"></div>
+
+    <div id="libraryList"></div>
+
   </main>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
@@ -154,6 +181,8 @@
     const submitButton = document.getElementById("submitBook");
     const scanButton = document.getElementById("scanButton");
     const scannerDiv = document.getElementById("scanner");
+    const viewLibraryButton = document.getElementById("viewLibrary");
+    const libraryList = document.getElementById("libraryList");
 
     let html5QrCode = null;
     let scanInProgress = false;
@@ -321,6 +350,48 @@
         message.textContent = "Could not start scanner: " + err.message;
       }
     });
+
+async function loadLibrary() {
+  try {
+    message.textContent = "Loading library...";
+    libraryList.innerHTML = "";
+
+    const res = await fetch(`${API_URL}?action=books`);
+    const data = await res.json();
+
+    if (!data.ok) {
+      message.textContent = "Could not load library.";
+      return;
+    }
+
+    const books = data.books || [];
+
+    if (books.length === 0) {
+      message.textContent = "No books in the library yet.";
+      return;
+    }
+
+    message.textContent = `${books.length} books in The Hencox Library`;
+
+    libraryList.innerHTML = books.map(book => `
+      <div class="book-card">
+        ${book["Cover URL"] ? `<img src="${book["Cover URL"]}" alt="">` : ""}
+        <div>
+          <strong>${book.Title || "Untitled"}</strong>
+          <div>${book.Authors || ""}</div>
+          <div>${book["Shelf / Location"] || ""}</div>
+          <div>${book.Rating ? "⭐ " + book.Rating : ""}</div>
+        </div>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.error("Library error:", err);
+    message.textContent = "Could not load library: " + err.message;
+  }
+}
+
+    viewLibraryButton.addEventListener("click", loadLibrary);
 
     submitButton.addEventListener("click", async () => {
       try {
