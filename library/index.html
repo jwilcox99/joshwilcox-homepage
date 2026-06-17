@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+cd ~/joshwilcox-homepage
+git add library/index.html
+git commit -m "Remove old library button handler"
+git pull --rebase origin main
+git push origin main<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -143,10 +147,6 @@
     <button type="button" id="homeAddButton">➕ Add Book Manually</button>
     <button type="button" id="homeLibraryButton">📚 View Library</button>
 
-    <h2>Recently Added</h2>
-    <div id="recentList"></div>
-  </section>
-
   <section id="addBookScreen" class="hidden">
     <button type="button" id="backFromAdd">← Back</button>
 
@@ -201,7 +201,6 @@
 
   <div class="status" id="message"></div>
 
-  <div class="version">VERSION HOME-001</div>
 </main>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
