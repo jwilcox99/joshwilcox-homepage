@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>The Hencox Library</title>
+
+  <link rel="manifest" href="/library/manifest.json">
+  <meta name="theme-color" content="#5c3b24">
+  <link rel="apple-touch-icon" href="/library/icons/icon-512.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="The Hencox Library">
+
   <style>
     body {
       margin: 0;
@@ -25,6 +33,10 @@
     h1 {
       margin-top: 0;
       font-size: 2rem;
+    }
+
+    h2 {
+      margin-top: 28px;
     }
 
     label {
@@ -58,8 +70,12 @@
     }
 
     #scanButton {
-      margin-top: 0;
+      margin-top: 12px;
       background: #7a5030;
+    }
+
+    #homeScreen button {
+      margin-top: 12px;
     }
 
     #scanner {
@@ -81,45 +97,58 @@
       margin-top: 14px;
       font-size: 0.8rem;
       opacity: 0.6;
+      text-align: center;
     }
 
-#libraryList {
-  margin-top: 20px;
-}
+    .hidden {
+      display: none;
+    }
 
-.book-card {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  margin-top: 12px;
-  background: #f8efe2;
-  border: 1px solid #d8c4aa;
-  border-radius: 16px;
-}
+    .screen {
+      margin-top: 20px;
+    }
 
-.book-card img {
-  width: 55px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 6px;
-  background: #ddd;
-}
+    #recentList,
+    #libraryList {
+      margin-top: 20px;
+    }
+
+    .book-card {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      margin-top: 12px;
+      background: #f8efe2;
+      border: 1px solid #d8c4aa;
+      border-radius: 16px;
+    }
+
+    .book-card img {
+      width: 55px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: #ddd;
+    }
   </style>
-
-<link rel="manifest" href="/library/manifest.json">
-
-<meta name="theme-color" content="#5c3b24">
-
-<link rel="apple-touch-icon" href="/library/icons/icon-512.png">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="The Hencox Library">
-
 </head>
+
 <body>
-  <main class="app">
-    <h1>📚 The Hencox Library</h1>
-    <p>Add a book to the family library.</p>
+<main class="app">
+  <h1>📚 The Hencox Library</h1>
+  <p>Explore the family library.</p>
+
+  <section id="homeScreen">
+    <button type="button" id="homeScanButton">📷 Scan Barcode</button>
+    <button type="button" id="homeAddButton">➕ Add Book</button>
+    <button type="button" id="homeLibraryButton">📚 View Library</button>
+
+    <h2>Recently Added</h2>
+    <div id="recentList"></div>
+  </section>
+
+  <section id="addBookScreen" class="hidden">
+    <button type="button" id="backFromAdd">← Back</button>
 
     <form id="bookForm" onsubmit="return false;">
       <button type="button" id="scanButton">Scan Barcode</button>
@@ -155,21 +184,25 @@
       <input type="hidden" name="publisher" />
       <input type="hidden" name="publishedDate" />
       <input type="hidden" name="pageCount" />
-     <div id="libraryList"></div>  <input type="hidden" name="categories" />
+      <input type="hidden" name="categories" />
       <input type="hidden" name="coverUrl" />
       <input type="hidden" name="googleBooksLink" />
       <input type="hidden" name="description" />
 
       <button type="button" id="submitBook">Add Book</button>
     </form>
+  </section>
 
-     <button id="viewLibrary">📖 View Library</button>
-
-    <div class="status" id="message"></div>
-
+  <section id="libraryScreen" class="hidden">
+    <button type="button" id="backFromLibrary">← Back</button>
+    <h2>Library</h2>
     <div id="libraryList"></div>
+  </section>
 
-  </main>
+  <div class="status" id="message"></div>
+
+  <div class="version">VERSION HOME-001</div>
+</main>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
 
