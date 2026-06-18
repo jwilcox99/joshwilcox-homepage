@@ -166,6 +166,14 @@ function fillSelect(id, values = []) {
     select.appendChild(option);
   });
 }
+function findDuplicateBook(isbn) {
+  const cleaned = cleanIsbn(isbn);
+
+  return allBooks.find(book =>
+    cleanIsbn(book["ISBN-13"]) === cleaned ||
+    cleanIsbn(book["ISBN-10"]) === cleaned
+  );
+}
 
 async function lookupBookByIsbn(isbn) {
   const cleaned = cleanIsbn(isbn);
@@ -214,6 +222,34 @@ async function lookupBookByIsbn(isbn) {
   form.elements["googleBooksLink"].value = `https://openlibrary.org/isbn/${cleaned}`;
   form.elements["description"].value = typeof data.description === "string" ? data.description : data.description?.value || "";
 
+  if (!allBooks.length) {
+  await loadLibrary();
+}
+  const duplicateBook = findDuplicateBook(cleaned);
+
+if (duplicateBook) {
+  message.innerHTML = `
+    Already in library:<br>
+    <strong>${duplicateBook.Title || "Untitled"}</strong><br>
+    ${duplicateBook.Authors || ""}<br><br>
+    <button type="button" id="updateDuplicateButton">Update Existing</button>
+    <button type="button" id="addDuplicateButton">Add Another Copy</button>
+  `;
+
+  document.getElementById("updateDuplicateButton").addEventListener("click", () => {
+    editBook(duplicateBook);
+  });
+
+  document.getElementById("addDuplicateButton").addEventListener("click", () => {
+    editingBookId = null;
+    form.elements["duplicateType"].value = "Intentional Duplicate";
+    submitButton.textContent = "Add Book";
+    message.textContent = "Adding another copy.";
+  });
+
+  return;
+}
+  
   message.textContent = `Found: ${data.title || "book"}${authorNames.length ? " by " + authorNames.join(", ") : ""}`;
 }
 
