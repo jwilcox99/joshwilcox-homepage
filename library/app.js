@@ -31,7 +31,10 @@ let previousScreen = "library";
 let html5QrCode = null;
 let scanInProgress = false;
 let allBooks = [];
-
+let editingBookId = null;
+// =====================================
+// Shows one app screen and hides the others.
+// =====================================
 function showScreen(name) {
   homeScreen.classList.add("hidden");
   addBookScreen.classList.add("hidden");
@@ -45,16 +48,23 @@ function showScreen(name) {
   if (name === "library") libraryScreen.classList.remove("hidden");
   if (name === "favorites") favoritesScreen.classList.remove("hidden");
 }
-
+// =====================================
+// Removes punctuation from an ISBN.
+// =====================================
 function cleanIsbn(value) {
   return String(value || "").replace(/[^0-9Xx]/g, "").toUpperCase();
 }
-
+// =====================================
+// Looks up a book in Open Library using its ISBN.
+// Populates the form with any metadata found.
+// =====================================
 function looksLikeIsbn(isbn) {
   const cleaned = cleanIsbn(isbn);
   return (cleaned.length === 13 && (cleaned.startsWith("978") || cleaned.startsWith("979"))) || cleaned.length === 10;
 }
-
+// =====================================
+// Autopopulates Genre based on an array of data.
+// =====================================
 function guessGenreFromBook(data) {
   const parts = [
     ...(data.subjects || []),
@@ -307,6 +317,34 @@ function renderFavorites() {
   message.textContent = `${favorites.length} favorites`;
 }
 
+function editBook(book) {
+  editingBookId = book["Book ID"] || null;
+
+  form.elements["title"].value = book.Title || "";
+  form.elements["authors"].value = book.Authors || "";
+  form.elements["status"].value = book.Status || "";
+  form.elements["location"].value = book["Shelf / Location"] || "";
+  form.elements["rating"].value = book.Rating || "";
+  form.elements["genre"].value = book.Genre || "";
+  form.elements["favorite"].value = book.Favorite || "";
+  form.elements["duplicateType"].value = book["Duplicate Type"] || "";
+  form.elements["notes"].value = book.Notes || "";
+  form.elements["isbn13"].value = book["ISBN-13"] || "";
+
+  form.elements["publisher"].value = book.Publisher || "";
+  form.elements["publishedDate"].value = book["Published Date"] || "";
+  form.elements["pageCount"].value = book["Page Count"] || "";
+  form.elements["categories"].value = book.Categories || "";
+  form.elements["coverUrl"].value = book["Cover URL"] || "";
+  form.elements["googleBooksLink"].value = book["Google Books Link"] || "";
+  form.elements["description"].value = book.Description || "";
+
+  submitButton.textContent = "Save Changes";
+  message.textContent = `Editing ${book.Title || "book"}`;
+
+  showScreen("add");
+}
+
 async function submitBook() {
   try {
     if (!form.reportValidity()) return;
@@ -380,9 +418,18 @@ async function submitBook() {
     ${book.Description ? `<p><strong>Description:</strong><br>${book.Description}</p>` : ""}
 
     ${book["Google Books Link"] ? `<p><a href="${book["Google Books Link"]}" target="_blank" rel="noreferrer">View source</a></p>` : ""}
+    <button type="button" id="editBookButton">
+    ✏️ Edit Book
+    </button>
   `;
 
-  showScreen("detail");
+showScreen("detail");
+
+document
+  .getElementById("editBookButton")
+  .addEventListener("click", () => {
+    editBook(book);
+  });
 }
 
 homeScanButton.addEventListener("click", async () => {
