@@ -1,16 +1,60 @@
+body { margin:0; font-family:Georgia,serif; background:#f4efe6; color:#2d241b; padding:24px; }
+.app { max-width:520px; margin:0 auto; background:#fffaf1; border-radius:22px; padding:24px; box-shadow:0 12px 30px rgba(0,0,0,.12); }
+h1 { margin-top:0; font-size:2rem; }
+h2 { margin-top:28px; }
+label { display:block; margin-top:14px; font-weight:bold; }
 
-    body { margin:0; font-family:Georgia,serif; background:#f4efe6; color:#2d241b; padding:24px; }
-    .app { max-width:520px; margin:0 auto; background:#fffaf1; border-radius:22px; padding:24px; box-shadow:0 12px >
-    h1 { margin-top:0; font-size:2rem; }
-    h2 { margin-top:28px; }
-    label { display:block; margin-top:14px; font-weight:bold; }
-    input, select, textarea, button { width:100%; box-sizing:border-box; margin-top:6px; padding:12px; border-radiu>
-    button { margin-top:14px; background:#5c3b24; color:white; border:none; font-weight:bold; cursor:pointer; }
-    button:disabled { opacity:.6; cursor:not-allowed; }
-    .hidden { display:none; }
-    .status { margin-top:16px; font-weight:bold; white-space:pre-wrap; }
-    #scanner { display:none; margin-top:16px; overflow:hidden; border-radius:16px; border:1px solid #c7b9a3; backgr>
-    .book-card { display:flex; gap:12px; padding:12px; margin-top:12px; background:#f8efe2; border:1px solid #d8c4a>
-    .book-card img { width:55px; height:80px; object-fit:cover; border-radius:6px; background:#ddd; }
-    .book-meta { font-size:.9rem; opacity:.8; margin-top:4px; }
-    .version { margin-top:14px; font-size:.8rem; opacity:.6; text-align:center; }
+input, select, textarea, button {
+  width:100%;
+  box-sizing:border-box;
+  margin-top:6px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #c7b9a3;
+  font-size:1rem;
+}
+
+button {
+  margin-top:14px;
+  background:#5c3b24;
+  color:white;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:disabled { opacity:.6; cursor:not-allowed; }
+
+.hidden { display:none !important; }
+
+.status { margin-top:16px; font-weight:bold; white-space:pre-wrap; }
+
+#scanner {
+  display:none;
+  margin-top:16px;
+  overflow:hidden;
+  border-radius:16px;
+  border:1px solid #c7b9a3;
+  background:#000;
+}
+
+.book-card {
+  display:flex;
+  gap:12px;
+  padding:12px;
+  margin-top:12px;
+  background:#f8efe2;
+  border:1px solid #d8c4aa;
+  border-radius:16px;
+}
+
+.book-card img {
+  width:55px;
+  height:80px;
+  object-fit:cover;
+  border-radius:6px;
+  background:#ddd;
+}
+
+.book-meta { font-size:.9rem; opacity:.8; margin-top:4px; }
+.version { margin-top:14px; font-size:.8rem; opacity:.6; text-align:center; }
