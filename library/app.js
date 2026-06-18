@@ -391,10 +391,16 @@ const res = await fetch(API_URL, {
     const result = await res.json();
 
     if (result.ok) {
-      message.textContent = `Added ${result.title || "book"} as ${result.bookId}`;
-      form.reset();
-      await loadLibrary();
-      showScreen("home");
+  message.textContent = result.updated
+    ? `Updated ${result.title || "book"}`
+    : `Added ${result.title || "book"} as ${result.bookId}`;
+
+  editingBookId = null;
+  submitButton.textContent = "Add Book";
+  form.reset();
+  await loadLibrary();
+  showScreen("home");
+};
     } else {
       message.textContent = `Error: ${result.error || "Unknown error"}`;
     }
