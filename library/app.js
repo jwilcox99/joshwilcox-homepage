@@ -374,10 +374,19 @@ async function submitBook() {
       description: formData.get("description")
     };
 
-    const res = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "addBook", book })
-    });
+    const action = editingBookId ? "updateBook" : "addBook";
+
+if (editingBookId) {
+  book.bookId = editingBookId;
+}
+
+const res = await fetch(API_URL, {
+  method: "POST",
+  body: JSON.stringify({
+    action,
+    book
+  })
+});
 
     const result = await res.json();
 
