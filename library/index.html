@@ -102,7 +102,12 @@
     <h2>Favorites</h2>
     <div id="favoritesList"></div>
   </section>
-
+  
+  <section id="detailScreen" class="hidden">
+    <button type="button" id="backFromDetail">← Back</button>
+    <div id="bookDetail"></div>
+  </section>
+  
   <div class="status" id="message"></div>
   <div class="version">VERSION V2-001</div>
 </main>
@@ -135,6 +140,11 @@ const librarySearch = document.getElementById("librarySearch");
 const libraryList = document.getElementById("libraryList");
 const favoritesList = document.getElementById("favoritesList");
 
+const detailScreen = document.getElementById("detailScreen");
+const backFromDetail = document.getElementById("backFromDetail");
+const bookDetail = document.getElementById("bookDetail");
+
+let previousScreen = "library";
 let html5QrCode = null;
 let scanInProgress = false;
 let allBooks = [];
@@ -144,7 +154,9 @@ function showScreen(name) {
   addBookScreen.classList.add("hidden");
   libraryScreen.classList.add("hidden");
   favoritesScreen.classList.add("hidden");
+  detailScreen.classList.add("hidden");
 
+  if (name === "detail") detailScreen.classList.remove("hidden");
   if (name === "home") homeScreen.classList.remove("hidden");
   if (name === "add") addBookScreen.classList.remove("hidden");
   if (name === "library") libraryScreen.classList.remove("hidden");
@@ -365,7 +377,7 @@ async function loadLibrary() {
 
 function renderLibrary(books, target) {
   target.innerHTML = books.map(book => `
-    <div class="book-card">
+    <div class="book-card" data-book-id="${book["Book ID"] || ""}">
       ${book["Cover URL"] ? `<img src="${book["Cover URL"]}" alt="">` : ""}
       <div>
         <strong>${book.Title || "Untitled"}</strong>
@@ -375,6 +387,18 @@ function renderLibrary(books, target) {
       </div>
     </div>
   `).join("");
+
+  target.querySelectorAll(".book-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const bookId = card.dataset.bookId;
+      const book = allBooks.find(item => item["Book ID"] === bookId);
+
+      if (book) {
+        previousScreen = target === favoritesList ? "favorites" : "library";
+        showBookDetail(book);
+      }
+    });
+  });
 }
 
 function filterLibrary() {
@@ -451,6 +475,33 @@ async function submitBook() {
   }
 }
 
+  function showBookDetail(book) {
+  bookDetail.innerHTML = `
+    ${book["Cover URL"] ? `<img src="${book["Cover URL"]}" alt="" style="width:140px;border-radius:10px;display:block;margin:0 auto 18px;">` : ""}
+
+    <h2>${book.Title || "Untitled"}</h2>
+    <p><strong>${book.Authors || ""}</strong></p>
+
+    <p>${book.Rating ? "⭐ " + book.Rating : ""}${book.Favorite ? " • Favorite" : ""}</p>
+
+    <p><strong>Status:</strong> ${book.Status || ""}</p>
+    <p><strong>Location:</strong> ${book["Shelf / Location"] || ""}</p>
+    <p><strong>Genre:</strong> ${book.Genre || ""}</p>
+
+    <p><strong>ISBN-13:</strong> ${book["ISBN-13"] || ""}</p>
+    <p><strong>Publisher:</strong> ${book.Publisher || ""}</p>
+    <p><strong>Published:</strong> ${book["Published Date"] || ""}</p>
+    <p><strong>Pages:</strong> ${book["Page Count"] || ""}</p>
+
+    ${book.Notes ? `<p><strong>Notes:</strong><br>${book.Notes}</p>` : ""}
+    ${book.Description ? `<p><strong>Description:</strong><br>${book.Description}</p>` : ""}
+
+    ${book["Google Books Link"] ? `<p><a href="${book["Google Books Link"]}" target="_blank" rel="noreferrer">View source</a></p>` : ""}
+  `;
+
+  showScreen("detail");
+}
+
 homeScanButton.addEventListener("click", async () => {
   form.reset();
   showScreen("add");
@@ -476,6 +527,10 @@ homeFavoritesButton.addEventListener("click", async () => {
 backFromAdd.addEventListener("click", async () => {
   await stopScanner();
   showScreen("home");
+});
+
+backFromDetail.addEventListener("click", () => {
+  showScreen(previousScreen);
 });
 
 backFromLibrary.addEventListener("click", () => showScreen("home"));
