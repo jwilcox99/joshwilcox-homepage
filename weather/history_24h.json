@@ -240,5 +240,16 @@
     "soil_status": "Missing",
     "battery_v": 4.15,
     "battery_percent": 92.0
+  },
+  {
+    "timestamp": "2026-06-18T06:45:56",
+    "temperature_f": 62.6,
+    "humidity": 43.3,
+    "pressure_hpa": 839.7,
+    "gas_kohms": 6.5,
+    "soil_percent": null,
+    "soil_status": "Missing",
+    "battery_v": 4.15,
+    "battery_percent": 92.0
   }
 ]
