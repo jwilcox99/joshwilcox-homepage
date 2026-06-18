@@ -54,7 +54,15 @@ function showScreen(name) {
 function cleanIsbn(value) {
   return String(value || "").replace(/[^0-9Xx]/g, "").toUpperCase();
 }
+function looksLikeIsbn(isbn) {
+  const cleaned = cleanIsbn(isbn);
 
+  return (
+    (cleaned.length === 13 &&
+      (cleaned.startsWith("978") || cleaned.startsWith("979"))) ||
+    cleaned.length === 10
+  );
+}
 // =====================================
 // Autopopulates Genre based on an array of data.
 // =====================================
