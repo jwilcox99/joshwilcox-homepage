@@ -160,34 +160,73 @@ function looksLikeIsbn(isbn) {
   return (cleaned.length === 13 && (cleaned.startsWith("978") || cleaned.startsWith("979"))) || cleaned.length === 10;
 }
 
-function guessGenre(subjects = []) {
-  const text = subjects.join(" ").toLowerCase();
+function guessGenreFromBook(data) {
+  const parts = [
+    ...(data.subjects || []),
+    data.subtitle || "",
+    data.title || "",
+    typeof data.description === "string"
+      ? data.description
+      : data.description?.value || ""
+  ];
 
-  if (text.includes("graphic novel") || text.includes("comic") || text.includes("comics") || text.includes("manga")) return "Graphic Novel";
-  if (text.includes("young adult") || text.includes("ya fiction") || text.includes("teen fiction")) return "Young Adult";
-  if ((text.includes("fantasy") && text.includes("romance")) || text.includes("romantasy")) return "Romantasy";
-  if (text.includes("historical romance")) return "Historical Romance";
-  if (text.includes("historical fiction")) return "Historical Fiction";
-  if (text.includes("science fiction") || text.includes("sci-fi")) return "Science Fiction";
-  if (text.includes("fantasy")) return "Fantasy";
-  if (text.includes("mystery") || text.includes("detective")) return "Mystery";
-  if (text.includes("thriller") || text.includes("suspense")) return "Thriller";
-  if (text.includes("horror")) return "Horror";
-  if (text.includes("romance")) return "Romance";
-  if (text.includes("biography") || text.includes("autobiography")) return "Biography";
-  if (text.includes("memoir")) return "Memoir";
-  if (text.includes("history")) return "History";
-  if (text.includes("business")) return "Business";
-  if (text.includes("self-help") || text.includes("self help")) return "Self-Help";
-  if (text.includes("cookery") || text.includes("cooking") || text.includes("cookbook")) return "Cookbook";
-  if (text.includes("travel")) return "Travel";
-  if (text.includes("poetry")) return "Poetry";
-  if (text.includes("children")) return "Children's";
-  if (text.includes("classic")) return "Classic";
-  if (text.includes("nonfiction")) return "Nonfiction";
-  if (text.includes("fiction")) return "Fiction";
+  const text = parts.join(" ").toLowerCase();
 
-  return "";
+  const scores = {};
+
+  function add(genre, points, terms) {
+    terms.forEach(term => {
+      if (text.includes(term)) {
+        scores[genre] = (scores[genre] || 0) + points;
+      }
+    });
+  }
+
+  add("Graphic Novel", 100, ["graphic novel", "graphic novels", "manga"]);
+  add("Graphic Novel", 75, ["comic book", "comics"]);
+
+  add("Young Adult", 100, ["young adult", "ya fiction"]);
+  add("Young Adult", 70, ["teen fiction", "juvenile fiction"]);
+
+  add("Historical Romance", 120, ["historical romance", "regency romance"]);
+  add("Historical Romance", 45, ["duke", "earl", "regency", "victorian"]);
+
+  add("Romantasy", 120, ["romantasy", "fantasy romance"]);
+  if (text.includes("fantasy") && text.includes("romance")) {
+    scores["Romantasy"] = (scores["Romantasy"] || 0) + 90;
+  }
+  add("Romantasy", 35, ["fae", "faerie", "dragon", "magic court"]);
+
+  add("Historical Fiction", 100, ["historical fiction"]);
+  add("Science Fiction", 100, ["science fiction", "sci-fi", "space opera"]);
+  add("Fantasy", 80, ["fantasy", "magic", "dragon", "wizard"]);
+  add("Mystery", 90, ["mystery", "detective", "whodunit"]);
+  add("Thriller", 90, ["thriller", "suspense"]);
+  add("Horror", 90, ["horror", "ghost", "haunted"]);
+  add("Romance", 80, ["romance", "love story"]);
+  add("Biography", 90, ["biography", "autobiography"]);
+  add("Memoir", 90, ["memoir"]);
+  add("History", 80, ["history"]);
+  add("Business", 80, ["business", "leadership", "management"]);
+  add("Self-Help", 80, ["self-help", "self help", "personal growth"]);
+  add("Cookbook", 90, ["cookbook", "cookery", "cooking", "recipes"]);
+  add("Travel", 80, ["travel"]);
+  add("Poetry", 90, ["poetry", "poems"]);
+  add("Children's", 80, ["children", "juvenile"]);
+  add("Classic", 60, ["classic"]);
+  add("Nonfiction", 60, ["nonfiction", "non-fiction"]);
+  add("Fiction", 40, ["fiction", "novel"]);
+
+  const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+  if (!ranked.length) return "";
+
+  const [bestGenre, score] = ranked[0];
+
+  // Avoid weak guesses.
+  if (score < 70) return "";
+
+  return bestGenre;
 }
 
 async function loadSettings() {
@@ -265,7 +304,7 @@ async function lookupBookByIsbn(isbn) {
   form.elements["publishedDate"].value = data.publish_date || "";
   form.elements["pageCount"].value = data.number_of_pages || "";
   form.elements["categories"].value = data.subjects ? data.subjects.slice(0, 8).join(", ") : "";
-  form.elements["genre"].value = guessGenre(data.subjects || []);
+  form.elements["genre"].value = guessGenreFromBook(data);
   form.elements["coverUrl"].value = data.covers && data.covers.length ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-L.jpg` : "";
   form.elements["googleBooksLink"].value = `https://openlibrary.org/isbn/${cleaned}`;
   form.elements["description"].value = typeof data.description === "string" ? data.description : data.description?.value || "";
