@@ -54,14 +54,7 @@ function showScreen(name) {
 function cleanIsbn(value) {
   return String(value || "").replace(/[^0-9Xx]/g, "").toUpperCase();
 }
-// =====================================
-// Looks up a book in Open Library using its ISBN.
-// Populates the form with any metadata found.
-// =====================================
-function looksLikeIsbn(isbn) {
-  const cleaned = cleanIsbn(isbn);
-  return (cleaned.length === 13 && (cleaned.startsWith("978") || cleaned.startsWith("979"))) || cleaned.length === 10;
-}
+
 // =====================================
 // Autopopulates Genre based on an array of data.
 // =====================================
@@ -204,11 +197,14 @@ async function lookupBookByIsbn(isbn) {
     for (const author of data.authors) {
       try {
         const authorRes = await fetch(`https://openlibrary.org${author.key}.json`);
+
         if (authorRes.ok) {
           const authorData = await authorRes.json();
           if (authorData.name) authorNames.push(authorData.name);
         }
-      } catch {}
+      } catch (err) {
+        console.error("Author lookup failed:", err);
+      }
     }
   }
 
@@ -223,33 +219,34 @@ async function lookupBookByIsbn(isbn) {
   form.elements["description"].value = typeof data.description === "string" ? data.description : data.description?.value || "";
 
   if (!allBooks.length) {
-  await loadLibrary();
-}
+    await loadLibrary();
+  }
+
   const duplicateBook = findDuplicateBook(cleaned);
 
-if (duplicateBook) {
-  message.innerHTML = `
-    Already in library:<br>
-    <strong>${duplicateBook.Title || "Untitled"}</strong><br>
-    ${duplicateBook.Authors || ""}<br><br>
-    <button type="button" id="updateDuplicateButton">Update Existing</button>
-    <button type="button" id="addDuplicateButton">Add Another Copy</button>
-  `;
+  if (duplicateBook) {
+    message.innerHTML = `
+      Already in library:<br>
+      <strong>${duplicateBook.Title || "Untitled"}</strong><br>
+      ${duplicateBook.Authors || ""}<br><br>
+      <button type="button" id="updateDuplicateButton">Update Existing</button>
+      <button type="button" id="addDuplicateButton">Add Another Copy</button>
+    `;
 
-  document.getElementById("updateDuplicateButton").addEventListener("click", () => {
-    editBook(duplicateBook);
-  });
+    document.getElementById("updateDuplicateButton").addEventListener("click", () => {
+      editBook(duplicateBook);
+    });
 
-  document.getElementById("addDuplicateButton").addEventListener("click", () => {
-    editingBookId = null;
-    form.elements["duplicateType"].value = "Intentional Duplicate";
-    submitButton.textContent = "Add Book";
-    message.textContent = "Adding another copy.";
-  });
+    document.getElementById("addDuplicateButton").addEventListener("click", () => {
+      editingBookId = null;
+      form.elements["duplicateType"].value = "Intentional Duplicate";
+      submitButton.textContent = "Add Book";
+      message.textContent = "Adding another copy.";
+    });
 
-  return;
-}
-  
+    return;
+  }
+
   message.textContent = `Found: ${data.title || "book"}${authorNames.length ? " by " + authorNames.join(", ") : ""}`;
 }
 
@@ -426,7 +423,7 @@ const res = await fetch(API_URL, {
 
     const result = await res.json();
 
-    if (result.ok) {
+  if (result.ok) {
   message.textContent = result.updated
     ? `Updated ${result.title || "book"}`
     : `Added ${result.title || "book"} as ${result.bookId}`;
@@ -436,10 +433,9 @@ const res = await fetch(API_URL, {
   form.reset();
   await loadLibrary();
   showScreen("home");
-};
-    } else {
-      message.textContent = `Error: ${result.error || "Unknown error"}`;
-    }
+} else {
+  message.textContent = `Error: ${result.error || "Unknown error"}`;
+}
   } catch (err) {
     message.textContent = "Could not add book: " + err.message;
   } finally {
