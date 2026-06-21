@@ -186,34 +186,166 @@ async function lookupBookByIsbn(isbn) {
 
   message.textContent = `Looking up ISBN ${cleaned}...`;
 
-  const res = await fetch(`https://openlibrary.org/isbn/${cleaned}.json`);
+let bookData = await lookupGoogleBooks(cleaned);
 
-  if (!res.ok) {
+if (!bookData) {
+  bookData = await lookupOpenLibrary(cleaned);
+}
+
+if (!bookData) {
+  form.elements["isbn13"].value = cleaned;
+  message.textContent = `ISBN ${cleaned} not found. Enter manually.`;
+  return;
+}
+
+async function lookupBookByIsbn(isbn) {
+  const cleaned = cleanIsbn(isbn);
+
+  if (!looksLikeIsbn(cleaned)) {
+    message.textContent = `Scanned ${cleaned}, but that does not look like an ISBN.`;
+    return;
+  }
+
+  message.textContent = `Looking up ISBN ${cleaned}...`;
+
+  let bookData = await lookupGoogleBooks(cleaned);
+
+  if (!bookData) {
+    bookData = await lookupOpenLibrary(cleaned);
+  }
+
+  if (!bookData) {
     form.elements["isbn13"].value = cleaned;
     message.textContent = `ISBN ${cleaned} not found. Enter manually.`;
     return;
   }
 
-  const data = await res.json();
+  populateBookForm(bookData, cleaned);
 
-  form.elements["title"].value = data.title || "";
-  form.elements["isbn13"].value = cleaned;
+  if (!allBooks.length) {
+    await loadLibrary();
+  }
 
-  let authorNames = [];
+  const duplicateBook = findDuplicateBook(cleaned);
 
-  if (data.authors && data.authors.length) {
-    for (const author of data.authors) {
-      try {
-        const authorRes = await fetch(`https://openlibrary.org${author.key}.json`);
+  if (duplicateBook) {
+    message.innerHTML = `
+      Already in library:<br>
+      <strong>${duplicateBook.Title || "Untitled"}</strong><br>
+      ${duplicateBook.Authors || ""}<br><br>
+      <button type="button" id="updateDuplicateButton">Update Existing</button>
+      <button type="button" id="addDuplicateButton">Add Another Copy</button>
+    `;
 
-        if (authorRes.ok) {
-          const authorData = await authorRes.json();
-          if (authorData.name) authorNames.push(authorData.name);
+    document.getElementById("updateDuplicateButton").addEventListener("click", () => {
+      editBook(duplicateBook);
+    });
+
+    document.getElementById("addDuplicateButton").addEventListener("click", () => {
+      editingBookId = null;
+      form.elements["duplicateType"].value = "Intentional Duplicate";
+      submitButton.textContent = "Add Book";
+      message.textContent = "Adding another copy.";
+    });
+
+    return;
+  }
+
+  message.textContent = `Found: ${bookData.title || "book"}${bookData.authors.length ? " by " + bookData.authors.join(", ") : ""}`;
+}
+
+async function lookupGoogleBooks(isbn) {
+  try {
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+    const data = await res.json();
+
+    if (!data.items || !data.items.length) return null;
+
+    const info = data.items[0].volumeInfo || {};
+
+    return {
+      title: info.title || "",
+      authors: info.authors || [],
+      publisher: info.publisher || "",
+      publishedDate: info.publishedDate || "",
+      pageCount: info.pageCount || "",
+      categories: info.categories || [],
+      coverUrl: info.imageLinks?.thumbnail || "",
+      sourceLink: info.infoLink || "",
+      description: info.description || "",
+      raw: info
+    };
+  } catch (err) {
+    console.error("Google Books lookup failed:", err);
+    return null;
+  }
+}
+
+async function lookupOpenLibrary(isbn) {
+  try {
+    const res = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+
+    let authorNames = [];
+
+    if (data.authors && data.authors.length) {
+      for (const author of data.authors) {
+        try {
+          const authorRes = await fetch(`https://openlibrary.org${author.key}.json`);
+
+          if (authorRes.ok) {
+            const authorData = await authorRes.json();
+            if (authorData.name) authorNames.push(authorData.name);
+          }
+        } catch (err) {
+          console.error("Open Library author lookup failed:", err);
         }
-      } catch (err) {
-        console.error("Author lookup failed:", err);
       }
     }
+
+    return {
+      title: data.title || "",
+      authors: authorNames,
+      publisher: data.publishers ? data.publishers.join(", ") : "",
+      publishedDate: data.publish_date || "",
+      pageCount: data.number_of_pages || "",
+      categories: data.subjects || [],
+      coverUrl: data.covers && data.covers.length
+        ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-L.jpg`
+        : "",
+      sourceLink: `https://openlibrary.org/isbn/${isbn}`,
+      description: typeof data.description === "string"
+        ? data.description
+        : data.description?.value || "",
+      raw: data
+    };
+  } catch (err) {
+    console.error("Open Library lookup failed:", err);
+    return null;
+  }
+}
+
+function populateBookForm(bookData, isbn) {
+  form.elements["title"].value = bookData.title || "";
+  form.elements["authors"].value = bookData.authors ? bookData.authors.join(", ") : "";
+  form.elements["isbn13"].value = isbn;
+
+  form.elements["publisher"].value = bookData.publisher || "";
+  form.elements["publishedDate"].value = bookData.publishedDate || "";
+  form.elements["pageCount"].value = bookData.pageCount || "";
+  form.elements["categories"].value = bookData.categories ? bookData.categories.slice(0, 8).join(", ") : "";
+  form.elements["genre"].value = guessGenreFromBook({
+    subjects: bookData.categories || [],
+    title: bookData.title || "",
+    description: bookData.description || ""
+  });
+  form.elements["coverUrl"].value = bookData.coverUrl || "";
+  form.elements["googleBooksLink"].value = bookData.sourceLink || "";
+  form.elements["description"].value = bookData.description || "";
+}
   }
 
   form.elements["authors"].value = authorNames.join(", ");
