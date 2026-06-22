@@ -186,28 +186,6 @@ async function lookupBookByIsbn(isbn) {
 
   message.textContent = `Looking up ISBN ${cleaned}...`;
 
-let bookData = await lookupGoogleBooks(cleaned);
-
-if (!bookData) {
-  bookData = await lookupOpenLibrary(cleaned);
-}
-
-if (!bookData) {
-  form.elements["isbn13"].value = cleaned;
-  message.textContent = `ISBN ${cleaned} not found. Enter manually.`;
-  return;
-}
-
-async function lookupBookByIsbn(isbn) {
-  const cleaned = cleanIsbn(isbn);
-
-  if (!looksLikeIsbn(cleaned)) {
-    message.textContent = `Scanned ${cleaned}, but that does not look like an ISBN.`;
-    return;
-  }
-
-  message.textContent = `Looking up ISBN ${cleaned}...`;
-
   let bookData = await lookupGoogleBooks(cleaned);
 
   if (!bookData) {
