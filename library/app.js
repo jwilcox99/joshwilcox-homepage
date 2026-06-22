@@ -325,20 +325,6 @@ function populateBookForm(bookData, isbn) {
   form.elements["description"].value = bookData.description || "";
 }
 
-  form.elements["authors"].value = authorNames.join(", ");
-  form.elements["publisher"].value = data.publishers ? data.publishers.join(", ") : "";
-  form.elements["publishedDate"].value = data.publish_date || "";
-  form.elements["pageCount"].value = data.number_of_pages || "";
-  form.elements["categories"].value = data.subjects ? data.subjects.slice(0, 8).join(", ") : "";
-  form.elements["genre"].value = guessGenreFromBook(data);
-  form.elements["coverUrl"].value = data.covers && data.covers.length ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-L.jpg` : "";
-  form.elements["googleBooksLink"].value = `https://openlibrary.org/isbn/${cleaned}`;
-  form.elements["description"].value = typeof data.description === "string" ? data.description : data.description?.value || "";
-
-  if (!allBooks.length) {
-    await loadLibrary();
-  }
-
 async function startScanner() {
   try {
     scannerDiv.style.display = "block";
