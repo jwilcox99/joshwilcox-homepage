@@ -324,7 +324,6 @@ function populateBookForm(bookData, isbn) {
   form.elements["googleBooksLink"].value = bookData.sourceLink || "";
   form.elements["description"].value = bookData.description || "";
 }
-  }
 
   form.elements["authors"].value = authorNames.join(", ");
   form.elements["publisher"].value = data.publishers ? data.publishers.join(", ") : "";
