@@ -339,34 +339,6 @@ function populateBookForm(bookData, isbn) {
     await loadLibrary();
   }
 
-  const duplicateBook = findDuplicateBook(cleaned);
-
-  if (duplicateBook) {
-    message.innerHTML = `
-      Already in library:<br>
-      <strong>${duplicateBook.Title || "Untitled"}</strong><br>
-      ${duplicateBook.Authors || ""}<br><br>
-      <button type="button" id="updateDuplicateButton">Update Existing</button>
-      <button type="button" id="addDuplicateButton">Add Another Copy</button>
-    `;
-
-    document.getElementById("updateDuplicateButton").addEventListener("click", () => {
-      editBook(duplicateBook);
-    });
-
-    document.getElementById("addDuplicateButton").addEventListener("click", () => {
-      editingBookId = null;
-      form.elements["duplicateType"].value = "Intentional Duplicate";
-      submitButton.textContent = "Add Book";
-      message.textContent = "Adding another copy.";
-    });
-
-    return;
-  }
-
-  message.textContent = `Found: ${data.title || "book"}${authorNames.length ? " by " + authorNames.join(", ") : ""}`;
-}
-
 async function startScanner() {
   try {
     scannerDiv.style.display = "block";
