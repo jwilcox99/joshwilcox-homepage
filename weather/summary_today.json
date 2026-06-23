@@ -1,0 +1,12 @@
+{
+  "reading_count": 12,
+  "temp_high_f": 86.3,
+  "temp_low_f": 62.3,
+  "temp_avg_f": 71.4,
+  "temp_swing_f": 24.0,
+  "humidity_avg": 63.5,
+  "pressure_avg_hpa": 843.6,
+  "soil_avg": 82.0,
+  "battery_low": 92.0,
+  "temp_trend": "Rising"
+}
