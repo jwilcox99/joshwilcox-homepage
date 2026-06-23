@@ -67,9 +67,7 @@ async function loadCurrent() {
     `${data.pressure_hpa?.toFixed(1) ?? "--"} hPa`;
 
   document.getElementById("gas").innerHTML =
-  data.gas_kohms != null `
-    ?${getVOCStatus(data.gas_kohms, history30)}<br><small>${data.gas_kohms.toFixed(1)} kΩ</small>`
-    : "--";
+    `${getVOCStatus(data.gas_kohms, history30)} <small>${data.gas_kohms.toFixed(1)} kΩ</small>`;
 
   document.getElementById("soil").textContent =
     data.soil_percent != null
