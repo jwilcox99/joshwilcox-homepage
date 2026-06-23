@@ -26,6 +26,35 @@ async function loadCurrent() {
     `Last updated: ${data.last_update}`;
 }
 
+async function loadTodaySummary() {
+  const response = await fetch("summary_today.json");
+  const data = await response.json();
+
+  const trendIcon =
+    data.temp_trend === "Rising" ? "⬆️ " :
+    data.temp_trend === "Falling" ? "⬇️ " :
+    "➡️ ";
+
+  document.getElementById("todayTrend").textContent =
+    data.temp_trend ? `${trendIcon}${data.temp_trend}` : "--";
+
+  document.getElementById("todayHigh").textContent =
+    data.temp_high_f != null ? `${data.temp_high_f.toFixed(1)}°F` : "--";
+
+  document.getElementById("todayLow").textContent =
+    data.temp_low_f != null ? `${data.temp_low_f.toFixed(1)}°F` : "--";
+
+  document.getElementById("todayAvg").textContent =
+    data.temp_avg_f != null ? `${data.temp_avg_f.toFixed(1)}°F` : "--";
+
+  document.getElementById("todaySwing").textContent =
+    data.temp_swing_f != null ? `${data.temp_swing_f.toFixed(1)}°F` : "--";
+
+  document.getElementById("todayReadings").textContent =
+    data.reading_count ?? "--";
+}
+
+
 function makeChart(canvasId, label, values, labels) {
   new Chart(document.getElementById(canvasId), {
     type: "line",
@@ -125,6 +154,7 @@ async function loadHistory(range = "24h") {
 }
 
 loadCurrent();
+loadTodaySummary();
 loadHistory("24h");
 
 document.querySelectorAll(".range-buttons button").forEach(button => {
