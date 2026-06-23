@@ -27,10 +27,10 @@ function getPressureTrend(current, history) {
 
   const delta = current - comparison.pressure_hpa;
 
-  if (delta >= 1.5) return "🟢"; // Rising
-  if (delta <= -1.5) return "🟠"; // Falling
+  if (delta >= 1.5) return "⬆️"; // Rising
+  if (delta <= -1.5) return "⬇️"; // Falling
 
-  return "🟡"; // Steady
+  return "🟢"; // Steady
 }
 
 function getVOCStatus(current, history) {
@@ -51,7 +51,7 @@ function getVOCStatus(current, history) {
   const elevated = avg * 0.90;
   const high = avg * 0.80;
 
-  if (current >= excellent) return "🟢🟢🟢";
+  if (current >= excellent) return "🟢🟢";
   if (current >= good) return "🟢";
   if (current <= high) return "🔴";
   if (current <= elevated) return "🟠";
