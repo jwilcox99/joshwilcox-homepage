@@ -28,6 +28,11 @@ async function loadCurrent() {
 
 async function loadTodaySummary() {
   const response = await fetch("summary_today.json");
+  
+  if (!response.ok) {
+    console.warn("summary_today.json not found yet");
+    return;
+  }
   const data = await response.json();
 
   const trendIcon =
