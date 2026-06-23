@@ -27,12 +27,12 @@ function getVOCStatus(current, history) {
 function getSoilStatus(percent) {
   if (percent == null) return "Unknown";
 
-  if (percent >= 90) return "💧 Wet";
-  if (percent >= 70) return "🟢 Moist";
-  if (percent >= 50) return "🟡 Drying";
-  if (percent >= 30) return "🟠 Dry";
+  if (percent >= 90) return "💧";
+  if (percent >= 70) return "🟢";
+  if (percent >= 50) return "🟡";
+  if (percent >= 30) return "🟠";
 
-  return "🔴 Water Needed";
+  return "🔴";
 }
 
 function getBatteryStatus(percent) {
@@ -90,10 +90,10 @@ async function loadCurrent() {
   document.getElementById("gas").innerHTML =
     `${getVOCStatus(data.gas_kohms, history30)} ${data.gas_kohms.toFixed(1)}`;
 
-  document.getElementById("soil").textContent =
+  document.getElementById("soil").innerHTML =
     data.soil_percent != null
-      ? `${data.soil_percent}%`
-      : data.soil_status || "N/A";
+      ? `${getSoilStatus(data.soil_percent)} ${data.soil_percent}%`
+      : "⚪ N/A";
 
   document.getElementById("battery").textContent =
     `${data.battery_percent ?? "--"}%`;
