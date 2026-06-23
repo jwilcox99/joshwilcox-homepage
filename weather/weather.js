@@ -1,6 +1,61 @@
+function getVOCStatus(current, history) {
+  if (current == null || !Array.isArray(history) || history.length < 10) {
+    return "VOC Normal";
+  }
+
+  const values = history
+    .map(r => r.gas_kohms)
+    .filter(v => v != null && !Number.isNaN(v));
+
+  if (values.length < 10) return "VOC Normal";
+
+  const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+
+  const excellent = avg * 1.20;
+  const good = avg * 1.10;
+  const elevated = avg * 0.90;
+  const high = avg * 0.80;
+
+  if (current >= excellent) return "🟢 Very Clean";
+  if (current >= good) return "🟢 Cleaner";
+  if (current <= high) return "🔴 High VOCs";
+  if (current <= elevated) return "🟠 Elevated";
+
+  return "🟡 Normal";
+}
+
+function getSoilStatus(percent) {
+  if (percent == null) return "Unknown";
+
+  if (percent >= 90) return "💧 Wet";
+  if (percent >= 70) return "🟢 Moist";
+  if (percent >= 50) return "🟡 Drying";
+  if (percent >= 30) return "🟠 Dry";
+
+  return "🔴 Water Needed";
+}
+
+function getBatteryStatus(percent) {
+  if (percent == null) return "Unknown";
+
+  if (percent >= 80) return "Excellent";
+  if (percent >= 60) return "Good";
+  if (percent >= 40) return "Fair";
+  if (percent >= 20) return "Low";
+
+  return "Recharge";
+}
 async function loadCurrent() {
   const response = await fetch("current.json");
   const data = await response.json();
+
+    let history30 = [];
+  try {
+    const historyResponse = await fetch("history_30d.json");
+    history30 = await historyResponse.json();
+  } catch (error) {
+    console.warn("Could not load VOC baseline history", error);
+  }
 
   document.getElementById("temp").textContent =
     `${data.temperature_f?.toFixed(1) ?? "--"}°F`;
@@ -11,8 +66,10 @@ async function loadCurrent() {
   document.getElementById("pressure").textContent =
     `${data.pressure_hpa?.toFixed(1) ?? "--"} hPa`;
 
-  document.getElementById("gas").textContent =
-    `${data.gas_kohms?.toFixed(1) ?? "--"} kΩ`;
+  document.getElementById("gas").innerHTML =
+  data.gas_kohms != null
+    ? `${getVOCStatus(data.gas_kohms, history30)}<br><small>${data.gas_kohms.toFixed(1)} kΩ</small>`
+    : "--";
 
   document.getElementById("soil").textContent =
     data.soil_percent != null
