@@ -121,7 +121,7 @@ async function loadCurrent() {
 
   document.getElementById("pressure").innerHTML =
     data.pressure_hpa != null
-      ? `${getPressureTrend(data.pressure_hpa, history30)} ${data.pressure_hpa.toFixed(1)} hPa`
+      ? `${getPressureTrend(data.pressure_hpa, history30)} ${data.pressure_hpa.toFixed(0)}`
       : "--";
 
   document.getElementById("gas").innerHTML =
