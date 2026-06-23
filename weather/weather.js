@@ -16,12 +16,12 @@ function getVOCStatus(current, history) {
   const elevated = avg * 0.90;
   const high = avg * 0.80;
 
-  if (current >= excellent) return "🟢 Very Clean";
-  if (current >= good) return "🟢 Cleaner";
-  if (current <= high) return "🔴 High VOCs";
-  if (current <= elevated) return "🟠 Elevated";
+  if (current >= excellent) return "🟢🟢🟢";
+  if (current >= good) return "🟢";
+  if (current <= high) return "🔴";
+  if (current <= elevated) return "🟠";
 
-  return "🟡 Normal";
+  return "🟡";
 }
 
 function getSoilStatus(percent) {
