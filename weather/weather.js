@@ -45,6 +45,27 @@ function getBatteryStatus(percent) {
 
   return "Recharge";
 }
+
+function formatLastUpdated(timestamp) {
+  if (!timestamp) return "Unknown";
+
+  const updated = new Date(timestamp);
+  const now = new Date();
+
+  const diffMinutes = Math.floor((now - updated) / 60000);
+
+  if (diffMinutes < 1) return "🟢 Just now";
+  if (diffMinutes < 60) return `🟢 ${diffMinutes} min ago`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+
+  if (diffHours < 24) return `🟡 ${diffHours} hr ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+
+  return `🔴 ${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+}
+
 async function loadCurrent() {
   const response = await fetch("current.json");
   const data = await response.json();
@@ -78,7 +99,7 @@ async function loadCurrent() {
     `${data.battery_percent ?? "--"}%`;
 
   document.getElementById("lastUpdated").textContent =
-    `Last updated: ${data.last_update}`;
+    formatLastUpdated(data.last_update);
 }
 
 async function loadTodaySummary() {
