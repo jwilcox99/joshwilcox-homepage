@@ -1,3 +1,38 @@
+function getPressureTrend(current, history) {
+  if (current == null || !Array.isArray(history) || history.length < 2) {
+    return "⚪";
+  }
+
+  const pressureReadings = history
+    .filter(r => r.pressure_hpa != null)
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  if (pressureReadings.length < 2) return "⚪";
+
+  const latest = pressureReadings[pressureReadings.length - 1];
+  const latestTime = new Date(latest.timestamp);
+
+  const threeHoursAgo = new Date(latestTime.getTime() - 3 * 60 * 60 * 1000);
+
+  let comparison = pressureReadings[0];
+
+  for (const reading of pressureReadings) {
+    const readingTime = new Date(reading.timestamp);
+    if (readingTime <= threeHoursAgo) {
+      comparison = reading;
+    } else {
+      break;
+    }
+  }
+
+  const delta = current - comparison.pressure_hpa;
+
+  if (delta >= 1.5) return "🟢"; // Rising
+  if (delta <= -1.5) return "🟠"; // Falling
+
+  return "🟡"; // Steady
+}
+
 function getVOCStatus(current, history) {
   if (current == null || !Array.isArray(history) || history.length < 10) {
     return "VOC Normal";
@@ -84,8 +119,10 @@ async function loadCurrent() {
   document.getElementById("humidity").textContent =
     `${data.humidity?.toFixed(1) ?? "--"}%`;
 
-  document.getElementById("pressure").textContent =
-    `${data.pressure_hpa?.toFixed(1) ?? "--"} hPa`;
+  document.getElementById("pressure").innerHTML =
+    data.pressure_hpa != null
+      ? `${getPressureTrend(data.pressure_hpa, history30)} ${data.pressure_hpa.toFixed(1)} hPa`
+      : "--";
 
   document.getElementById("gas").innerHTML =
     `${getVOCStatus(data.gas_kohms, history30)} ${data.gas_kohms.toFixed(1)}`;
