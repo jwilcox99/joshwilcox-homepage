@@ -12,13 +12,13 @@ function getPressureTrend(current, history) {
   const latest = pressureReadings[pressureReadings.length - 1];
   const latestTime = new Date(latest.timestamp);
 
-  const threeHoursAgo = new Date(latestTime.getTime() - 3 * 60 * 60 * 1000);
+  const sixHoursAgo = new Date(latestTime.getTime() - 6 * 60 * 60 * 1000);
 
   let comparison = pressureReadings[0];
 
   for (const reading of pressureReadings) {
     const readingTime = new Date(reading.timestamp);
-    if (readingTime <= threeHoursAgo) {
+    if (readingTime <= sixHoursAgo) {
       comparison = reading;
     } else {
       break;
