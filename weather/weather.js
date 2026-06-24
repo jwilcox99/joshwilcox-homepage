@@ -332,6 +332,7 @@ gardenChart = createOrUpdateMultiChart(
   ],
   labels
 );
+}
 
 loadCurrent();
 loadTodaySummary();
@@ -348,4 +349,3 @@ document.querySelectorAll(".range-buttons button").forEach(button => {
     loadHistory(button.dataset.range);
   });
 });
-}
