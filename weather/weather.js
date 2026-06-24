@@ -47,7 +47,7 @@ function addPressureIndex(history) {
     ...r,
     pressure_index:
       r.pressure_hpa != null
-        ? 100 + (((r.pressure_hpa - avgPressure) / avgPressure) * 100 * 50)
+        ? 100 + (((r.pressure_hpa - avgPressure) / avgPressure) * 100 * 30)
         : null
   }));
 }
