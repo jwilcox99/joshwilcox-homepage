@@ -33,6 +33,25 @@ function getPressureTrend(current, history) {
   return "🟢"; // Steady
 }
 
+function addPressureIndex(history) {
+  const values = history
+    .map(r => r.pressure_hpa)
+    .filter(v => v != null && !Number.isNaN(v));
+
+  if (values.length === 0) return history;
+
+  const avgPressure =
+    values.reduce((sum, v) => sum + v, 0) / values.length;
+
+  return history.map(r => ({
+    ...r,
+    pressure_index:
+      r.pressure_hpa != null
+        ? 100 + (((r.pressure_hpa - avgPressure) / avgPressure) * 100 * 20)
+        : null
+  }));
+}
+
 function getVOCStatus(current, history) {
   if (current == null || !Array.isArray(history) || history.length < 10) {
     return "VOC Normal";
@@ -57,6 +76,25 @@ function getVOCStatus(current, history) {
   if (current <= elevated) return "🟠";
 
   return "🟡";
+}
+
+function addVOCIndex(history) {
+  const values = history
+    .map(r => r.gas_kohms)
+    .filter(v => v != null && !Number.isNaN(v));
+
+  if (values.length === 0) return history;
+
+  const avgGas =
+    values.reduce((sum, v) => sum + v, 0) / values.length;
+
+  return history.map(r => ({
+    ...r,
+    voc_index:
+      r.gas_kohms != null
+        ? 100 + (((r.gas_kohms - avgGas) / avgGas) * 100)
+        : null
+  }));
 }
 
 function getSoilStatus(percent) {
@@ -221,6 +259,8 @@ function createOrUpdateChart(existingChart, canvasId, label, values, labels) {
 async function loadHistory(range = "24h") {
   const response = await fetch(`history_${range}.json`);
   const history = await response.json();
+  const weatherHistory = addPressureIndex(history);
+  const gardenHistory = addVOCIndex(history);
 
   const labels = history.map(r => {
     const d = new Date(r.timestamp);
