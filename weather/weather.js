@@ -348,3 +348,4 @@ document.querySelectorAll(".range-buttons button").forEach(button => {
     loadHistory(button.dataset.range);
   });
 });
+}
