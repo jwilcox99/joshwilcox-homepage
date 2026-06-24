@@ -320,11 +320,6 @@ gardenChart = createOrUpdateMultiChart(
       tension: 0.3
     },
     {
-      label: "Battery %",
-      data: history.map(r => r.battery_percent),
-      tension: 0.3
-    },
-    {
       label: "VOC Index",
       data: gardenHistory.map(r => r.voc_index),
       tension: 0.3
