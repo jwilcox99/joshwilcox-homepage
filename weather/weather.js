@@ -229,12 +229,10 @@ function makeChart(canvasId, label, values, labels) {
   });
 }
 
-let tempChart;
-let humidityChart;
-let pressureChart;
-let batteryChart;
+let weatherChart;
+let gardenChart;
 
-function createOrUpdateChart(existingChart, canvasId, label, values, labels) {
+function createOrUpdateMultiChart(existingChart, canvasId, datasets, labels) {
   if (existingChart) {
     existingChart.destroy();
   }
@@ -243,15 +241,26 @@ function createOrUpdateChart(existingChart, canvasId, label, values, labels) {
     type: "line",
     data: {
       labels: labels,
-      datasets: [{
-        label: label,
-        data: values,
-        tension: 0.3
-      }]
+      datasets: datasets
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 125
+        }
+      }
     }
   });
 }
@@ -278,38 +287,51 @@ async function loadHistory(range = "24h") {
     });
   });
 
-  tempChart = createOrUpdateChart(
-    tempChart,
-    "tempChart",
-    "Temperature (°F)",
-    history.map(r => r.temperature_f),
-    labels
-  );
+  weatherChart = createOrUpdateMultiChart(
+  weatherChart,
+  "tempChart",
+  [
+    {
+      label: "Temperature °F",
+      data: history.map(r => r.temperature_f),
+      tension: 0.3
+    },
+    {
+      label: "Humidity %",
+      data: history.map(r => r.humidity),
+      tension: 0.3
+    },
+    {
+      label: "Pressure Index",
+      data: weatherHistory.map(r => r.pressure_index),
+      tension: 0.3
+    }
+  ],
+  labels
+);
 
-  humidityChart = createOrUpdateChart(
-    humidityChart,
-    "humidityChart",
-    "Humidity (%)",
-    history.map(r => r.humidity),
-    labels
-  );
-
-  pressureChart = createOrUpdateChart(
-    pressureChart,
-    "pressureChart",
-    "Pressure (hPa)",
-    history.map(r => r.pressure_hpa),
-    labels
-  );
-
-  batteryChart = createOrUpdateChart(
-    batteryChart,
-    "batteryChart",
-    "Battery (%)",
-    history.map(r => r.battery_percent),
-    labels
-  );
-}
+gardenChart = createOrUpdateMultiChart(
+  gardenChart,
+  "humidityChart",
+  [
+    {
+      label: "Soil Moisture %",
+      data: history.map(r => r.soil_percent),
+      tension: 0.3
+    },
+    {
+      label: "Battery %",
+      data: history.map(r => r.battery_percent),
+      tension: 0.3
+    },
+    {
+      label: "VOC Index",
+      data: gardenHistory.map(r => r.voc_index),
+      tension: 0.3
+    }
+  ],
+  labels
+);
 
 loadCurrent();
 loadTodaySummary();
