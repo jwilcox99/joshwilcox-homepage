@@ -44,22 +44,22 @@ h1 {
   color: #9fb0c0;
   margin-top: 2rem;
 }
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+.mini-card {
+  display: flex;
+  align-items: center;
   gap: 1rem;
-  margin-top: 2rem;
-}
 
-.mini-card,
-.section-card {
-  display: block;
+  width: 300px;
+  padding: 1rem 1.25rem;
+
   text-decoration: none;
   color: inherit;
+
   background: #1a2027;
   border: 1px solid #2f3a45;
-  border-radius: 16px;
-  padding: 1.25rem;
+  border-radius: 14px;
+
+  transition: transform .15s ease, border-color .15s ease;
 }
 
 .mini-card:hover {
@@ -67,14 +67,18 @@ h1 {
   border-color: #5f7f9f;
 }
 
-.mini-card.primary {
-  border-color: #8aa7c7;
-}
-
-.section-card {
-  margin-top: 1.5rem;
-}
-
 .mini-card .icon {
   font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.mini-card h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.mini-card p {
+  margin: .25rem 0 0;
+  font-size: .9rem;
+  color: #b8c3cf;
 }
