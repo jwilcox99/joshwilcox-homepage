@@ -285,7 +285,7 @@ return new Chart(document.getElementById(canvasId), {
       },
       scales: {
         y: {
-          min: 0,
+          min: 20,
           max: 125
         }
       }
