@@ -232,13 +232,41 @@ function makeChart(canvasId, label, values, labels) {
 let weatherChart;
 let gardenChart;
 
+const baseline100 = {
+  id: "baseline100",
+
+  afterDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+
+    const y = scales.y.getPixelForValue(100);
+
+    if (y < chartArea.top || y > chartArea.bottom) return;
+
+    ctx.save();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 6]);
+
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, y);
+    ctx.lineTo(chartArea.right, y);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+};
+
 function createOrUpdateMultiChart(existingChart, canvasId, datasets, labels) {
   if (existingChart) {
     existingChart.destroy();
   }
 
-  return new Chart(document.getElementById(canvasId), {
-    type: "line",
+  
+return new Chart(document.getElementById(canvasId), {
+  type: "line",
+
+  plugins: [baseline100],
     data: {
       labels: labels,
       datasets: datasets
