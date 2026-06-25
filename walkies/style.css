@@ -44,3 +44,37 @@ h1 {
   color: #9fb0c0;
   margin-top: 2rem;
 }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.mini-card,
+.section-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: #1a2027;
+  border: 1px solid #2f3a45;
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.mini-card:hover {
+  transform: translateY(-2px);
+  border-color: #5f7f9f;
+}
+
+.mini-card.primary {
+  border-color: #8aa7c7;
+}
+
+.section-card {
+  margin-top: 1.5rem;
+}
+
+.mini-card .icon {
+  font-size: 2rem;
+}
