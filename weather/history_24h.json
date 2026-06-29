@@ -1,16 +1,5 @@
 [
   {
-    "timestamp": "2026-06-28T12:45:47",
-    "temperature_f": null,
-    "humidity": null,
-    "pressure_hpa": null,
-    "gas_kohms": null,
-    "soil_percent": null,
-    "soil_status": "Missing",
-    "battery_v": 4.15,
-    "battery_percent": 92.0
-  },
-  {
     "timestamp": "2026-06-28T13:46:03",
     "temperature_f": 98.4,
     "humidity": 18.1,
@@ -270,6 +259,17 @@
     "pressure_hpa": 831.8,
     "gas_kohms": 5.7,
     "soil_percent": 77.0,
+    "soil_status": "Medium",
+    "battery_v": 4.15,
+    "battery_percent": 92.0
+  },
+  {
+    "timestamp": "2026-06-29T12:45:50",
+    "temperature_f": 93.0,
+    "humidity": 18.8,
+    "pressure_hpa": 831.7,
+    "gas_kohms": 5.7,
+    "soil_percent": 75.0,
     "soil_status": "Medium",
     "battery_v": 4.15,
     "battery_percent": 92.0
