@@ -1,12 +1,12 @@
 {
-  "temperature_f": 104.8,
-  "humidity": 15.2,
-  "pressure_hpa": 834.0,
-  "gas_kohms": 11.7,
-  "soil_raw": 578,
-  "soil_percent": 35,
+  "temperature_f": 116.4,
+  "humidity": 10.6,
+  "pressure_hpa": 833.8,
+  "gas_kohms": 11.2,
+  "soil_raw": 572,
+  "soil_percent": 34,
   "soil_status": "Dry",
   "battery_v": 4.15,
   "battery_percent": 92,
-  "last_update": "2026-08-03T15:46:57"
+  "last_update": "2026-08-03T16:47:06"
 }
