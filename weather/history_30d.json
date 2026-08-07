@@ -1472,5 +1472,16 @@
     "soil_status": "Medium",
     "battery_v": 4.15,
     "battery_percent": 92.0
+  },
+  {
+    "timestamp": "2026-08-07T06:33:39",
+    "temperature_f": 66.3,
+    "humidity": 42.2,
+    "pressure_hpa": 845.0,
+    "gas_kohms": 19.5,
+    "soil_percent": 66.0,
+    "soil_status": "Medium",
+    "battery_v": 4.15,
+    "battery_percent": 92.0
   }
 ]
