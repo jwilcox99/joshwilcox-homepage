@@ -1,16 +1,5 @@
 [
   {
-    "timestamp": "2026-08-21T20:44:19",
-    "temperature_f": 83.4,
-    "humidity": 36.3,
-    "pressure_hpa": 845.0,
-    "gas_kohms": 20.7,
-    "soil_percent": 65.0,
-    "soil_status": "Medium",
-    "battery_v": 4.15,
-    "battery_percent": 92.0
-  },
-  {
     "timestamp": "2026-08-21T22:44:00",
     "temperature_f": 76.7,
     "humidity": 48.1,
